@@ -84,6 +84,10 @@ const TopicSelector = ({ onSelectTopics }: TopicSelectorProps) => {
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const { toast } = useToast();
   const MAX_TOPICS = 5;
+  
+  // Using a consistent color for both checkmarks and CTA
+  const accentColor = "bg-purple-500"; // Primary accent color
+  const accentHoverColor = "hover:bg-purple-600"; // Slightly darker for hover state
 
   const handleTopicToggle = (topicId: string) => {
     if (selectedTopics.includes(topicId)) {
@@ -134,7 +138,7 @@ const TopicSelector = ({ onSelectTopics }: TopicSelectorProps) => {
             className={cn(
               "cursor-pointer transition-all duration-200 hover:shadow-md relative overflow-hidden group h-48",
               selectedTopics.includes(topic.id) 
-                ? `border-2 border-${topic.color.split("-")[1]}-600 shadow-md` 
+                ? "border-2 border-purple-600 shadow-md" 
                 : "border border-gray-200"
             )}
             onClick={() => handleTopicToggle(topic.id)}
@@ -149,7 +153,7 @@ const TopicSelector = ({ onSelectTopics }: TopicSelectorProps) => {
             </div>
             
             {selectedTopics.includes(topic.id) && (
-              <div className={`absolute top-2 right-2 w-6 h-6 flex items-center justify-center ${topic.color} text-white rounded-full z-10`}>
+              <div className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-purple-500 text-white rounded-full z-10">
                 <Check size={14} />
               </div>
             )}
@@ -163,7 +167,7 @@ const TopicSelector = ({ onSelectTopics }: TopicSelectorProps) => {
 
       <div className="mt-12 text-center">
         <Button 
-          className="px-8 py-6 text-lg"
+          className={`px-8 py-6 text-lg ${accentColor} ${accentHoverColor} border-none`}
           onClick={handleSubmit}
           disabled={selectedTopics.length === 0}
         >
