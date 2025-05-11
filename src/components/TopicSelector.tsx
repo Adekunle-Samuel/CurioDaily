@@ -1,22 +1,79 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
-const availableTopics = [
-  { id: "science", name: "Science", color: "bg-blue-500" },
-  { id: "history", name: "History", color: "bg-amber-500" },
-  { id: "geography", name: "Geography", color: "bg-emerald-500" },
-  { id: "art", name: "Art & Culture", color: "bg-purple-500" },
-  { id: "technology", name: "Technology", color: "bg-rose-500" },
-  { id: "space", name: "Space", color: "bg-indigo-500" },
-  { id: "nature", name: "Nature", color: "bg-green-500" },
-  { id: "food", name: "Food", color: "bg-orange-500" },
-  { id: "sports", name: "Sports", color: "bg-red-500" },
-  { id: "music", name: "Music", color: "bg-pink-500" }
+interface TopicImage {
+  id: string;
+  name: string;
+  color: string;
+  image: string;
+}
+
+const availableTopics: TopicImage[] = [
+  { 
+    id: "science", 
+    name: "Science", 
+    color: "bg-blue-500",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=300&q=80"
+  },
+  { 
+    id: "history", 
+    name: "History", 
+    color: "bg-amber-500",
+    image: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=300&q=80"
+  },
+  { 
+    id: "geography", 
+    name: "Geography", 
+    color: "bg-emerald-500",
+    image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=300&q=80"
+  },
+  { 
+    id: "art", 
+    name: "Art & Culture", 
+    color: "bg-purple-500",
+    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=300&q=80"
+  },
+  { 
+    id: "technology", 
+    name: "Technology", 
+    color: "bg-rose-500",
+    image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=300&q=80"
+  },
+  { 
+    id: "space", 
+    name: "Space", 
+    color: "bg-indigo-500",
+    image: "https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?auto=format&fit=crop&w=300&q=80"
+  },
+  { 
+    id: "nature", 
+    name: "Nature", 
+    color: "bg-green-500",
+    image: "https://images.unsplash.com/photo-1433086966358-54859d0ed716?auto=format&fit=crop&w=300&q=80"
+  },
+  { 
+    id: "food", 
+    name: "Food", 
+    color: "bg-orange-500",
+    image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?auto=format&fit=crop&w=300&q=80"
+  },
+  { 
+    id: "sports", 
+    name: "Sports", 
+    color: "bg-red-500",
+    image: "https://images.unsplash.com/photo-1452960962994-acf4fd70b632?auto=format&fit=crop&w=300&q=80"
+  },
+  { 
+    id: "music", 
+    name: "Music", 
+    color: "bg-pink-500",
+    image: "https://images.unsplash.com/photo-1485833077593-4278bba3f11f?auto=format&fit=crop&w=300&q=80"
+  }
 ];
 
 interface TopicSelectorProps {
@@ -63,7 +120,7 @@ const TopicSelector = ({ onSelectTopics }: TopicSelectorProps) => {
         <p className="text-xl text-gray-600 mb-8">
           Select up to 5 topics you're interested in to get started
         </p>
-        <div className="bg-white p-3 rounded-lg inline-block mb-6">
+        <div className="bg-white p-3 rounded-lg inline-block mb-6 shadow-sm">
           <p className="text-sm font-medium">
             {selectedTopics.length} of {MAX_TOPICS} topics selected
           </p>
@@ -75,24 +132,31 @@ const TopicSelector = ({ onSelectTopics }: TopicSelectorProps) => {
           <Card 
             key={topic.id}
             className={cn(
-              "p-4 cursor-pointer transition-all duration-200 hover:shadow-md relative overflow-hidden flex flex-col items-center justify-center h-32",
+              "cursor-pointer transition-all duration-200 hover:shadow-md relative overflow-hidden group h-48",
               selectedTopics.includes(topic.id) 
                 ? `border-2 border-${topic.color.split("-")[1]}-600 shadow-md` 
                 : "border border-gray-200"
             )}
             onClick={() => handleTopicToggle(topic.id)}
           >
+            <div className="absolute inset-0 w-full h-full">
+              <img 
+                src={topic.image} 
+                alt={topic.name}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              <div className={`absolute inset-0 bg-gradient-to-t from-black/70 to-transparent`}></div>
+            </div>
+            
             {selectedTopics.includes(topic.id) && (
-              <div className={`absolute top-0 right-0 w-6 h-6 flex items-center justify-center ${topic.color} text-white`}>
+              <div className={`absolute top-2 right-2 w-6 h-6 flex items-center justify-center ${topic.color} text-white rounded-full z-10`}>
                 <Check size={14} />
               </div>
             )}
-            <div 
-              className={`w-12 h-12 rounded-full mb-2 flex items-center justify-center ${topic.color} bg-opacity-20`}
-            >
-              <div className={`w-8 h-8 rounded-full ${topic.color}`}></div>
+            
+            <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+              <span className="font-medium text-lg">{topic.name}</span>
             </div>
-            <span className="font-medium text-center">{topic.name}</span>
           </Card>
         ))}
       </div>
