@@ -1,0 +1,48 @@
+
+[
+  {
+    "id": 1,
+    "title": "Octopuses Have Three Hearts",
+    "blurb": "These incredible creatures pump blood with triple the power!",
+    "body": "Octopuses have three hearts that work together to pump blood throughout their bodies. Two hearts pump blood to the gills, while the third pumps blood to the rest of the body. Interestingly, the main heart stops beating when they swim, which is why they prefer crawling.",
+    "topic": "science",
+    "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
+    "sources": ["National Geographic", "Marine Biology Journal"]
+  },
+  {
+    "id": 2,
+    "title": "The Great Wall Isn't Visible from Space",
+    "blurb": "This famous 'fact' is actually a widespread myth!",
+    "body": "Contrary to popular belief, the Great Wall of China is not visible from space with the naked eye. This myth has been debunked by numerous astronauts. The wall is narrow and made of materials that blend with the natural landscape, making it virtually impossible to see from orbit without aid.",
+    "topic": "history",
+    "image": "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&w=800&q=80",
+    "sources": ["NASA", "Space.com", "Historical Society"]
+  },
+  {
+    "id": 3,
+    "title": "Van Gogh Only Sold One Painting",
+    "blurb": "The master artist died in poverty, unrecognized in his time.",
+    "body": "Vincent van Gogh, now considered one of the greatest artists of all time, only sold one painting during his lifetime: 'The Red Vineyard at Arles' for 400 francs. He created over 2,000 artworks but struggled with mental illness and poverty throughout his career.",
+    "topic": "arts",
+    "image": "https://images.unsplash.com/photo-1541961017774-22349e4a1262?auto=format&fit=crop&w=800&q=80",
+    "sources": ["Van Gogh Museum", "Art History Institute"]
+  },
+  {
+    "id": 4,
+    "title": "Jupiter Has 95 Confirmed Moons",
+    "blurb": "The gas giant is like a mini solar system!",
+    "body": "Jupiter, the largest planet in our solar system, has 95 confirmed moons as of 2023. The four largest moons—Io, Europa, Ganymede, and Callisto—were discovered by Galileo in 1610. Europa is particularly interesting as it may harbor a subsurface ocean beneath its icy crust.",
+    "topic": "space",
+    "image": "https://images.unsplash.com/photo-1614728894747-a83421771702?auto=format&fit=crop&w=800&q=80",
+    "sources": ["NASA JPL", "ESA", "Astronomy Magazine"]
+  },
+  {
+    "id": 5,
+    "title": "Honey Never Spoils",
+    "blurb": "Ancient honey found in Egyptian tombs is still perfectly edible!",
+    "body": "Honey has an indefinite shelf life due to its unique chemical composition. Its low moisture content and acidic pH create an environment where bacteria cannot survive. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still perfectly preserved.",
+    "topic": "science",
+    "image": "https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80",
+    "sources": ["Food Science Journal", "Archaeological Review"]
+  }
+]
