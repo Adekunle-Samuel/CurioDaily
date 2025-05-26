@@ -5,19 +5,7 @@ import { ArrowLeft, RefreshCw } from "lucide-react";
 import { FactCard } from "./FactCard";
 import facts from "@/data/facts";
 import { useToast } from "@/hooks/use-toast";
-
-const topicColors: Record<string, string> = {
-  science: "blue-500",
-  history: "amber-500",
-  geography: "emerald-500",
-  art: "purple-500",
-  technology: "rose-500",
-  space: "indigo-500",
-  nature: "green-500",
-  food: "orange-500",
-  sports: "red-500",
-  music: "pink-500"
-};
+import { useBookmarks } from "@/hooks/useBookmarks";
 
 interface DashboardProps {
   selectedTopics: string[];
@@ -27,6 +15,7 @@ interface DashboardProps {
 const Dashboard = ({ selectedTopics, onReset }: DashboardProps) => {
   const [displayedFacts, setDisplayedFacts] = useState<typeof facts>([]);
   const { toast } = useToast();
+  const { bookmarks, addBookmark, removeBookmark, isBookmarked } = useBookmarks();
 
   useEffect(() => {
     getNewFacts();
@@ -51,6 +40,39 @@ const Dashboard = ({ selectedTopics, onReset }: DashboardProps) => {
       title: "Facts refreshed!",
       description: "Discover new fascinating information about your selected topics.",
     });
+  };
+
+  const handleBookmarkToggle = (fact: typeof facts[0]) => {
+    if (isBookmarked(fact.id)) {
+      removeBookmark(fact.id);
+      toast({
+        title: "Bookmark removed",
+        description: `Removed "${fact.title}" from bookmarks.`,
+      });
+    } else {
+      addBookmark(fact);
+      toast({
+        title: "Bookmark added",
+        description: `Added "${fact.title}" to bookmarks.`,
+      });
+    }
+  };
+
+  const handleShare = (fact: typeof facts[0]) => {
+    if (navigator.share) {
+      navigator.share({
+        title: fact.title,
+        text: fact.blurb,
+        url: window.location.href,
+      });
+    } else {
+      // Fallback for browsers without Web Share API
+      navigator.clipboard.writeText(`${fact.title}: ${fact.blurb}`);
+      toast({
+        title: "Copied to clipboard",
+        description: "Fact copied to clipboard for sharing.",
+      });
+    }
   };
 
   return (
@@ -81,7 +103,9 @@ const Dashboard = ({ selectedTopics, onReset }: DashboardProps) => {
           <FactCard 
             key={fact.id} 
             fact={fact} 
-            colorClass={topicColors[fact.topic]} 
+            isBookmarked={isBookmarked(fact.id)}
+            onBookmarkToggle={handleBookmarkToggle}
+            onShare={handleShare}
           />
         ))}
       </div>

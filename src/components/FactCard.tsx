@@ -47,6 +47,7 @@ export const FactCard = ({
     history: 'bg-amber-500',
     arts: 'bg-purple-500',
     space: 'bg-indigo-500',
+    geography: 'bg-emerald-500',
     random: 'bg-pink-500'
   };
 
