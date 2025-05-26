@@ -34,14 +34,6 @@ export const FactCard = ({
   // Check for reduced motion preference
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const bind = useGesture({
-    onClick: () => {
-      if (!prefersReducedMotion) {
-        setFlipped(!flipped);
-      }
-    }
-  });
-
   const topicColors = {
     science: 'bg-blue-500',
     history: 'bg-amber-500',
@@ -59,6 +51,12 @@ export const FactCard = ({
   const handleBookmark = (e: React.MouseEvent) => {
     e.stopPropagation();
     onBookmarkToggle?.(fact);
+  };
+
+  const handleCardClick = () => {
+    if (!prefersReducedMotion) {
+      setFlipped(!flipped);
+    }
   };
 
   if (prefersReducedMotion) {
@@ -186,12 +184,12 @@ export const FactCard = ({
 
   return (
     <div 
-      {...bind()} 
       className={cn(
         "relative w-full max-w-md mx-auto aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer",
         className
       )}
       style={{ perspective: '600px' }}
+      onClick={handleCardClick}
     >
       {/* Front Side */}
       <animated.div
