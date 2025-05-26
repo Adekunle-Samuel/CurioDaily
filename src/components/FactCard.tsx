@@ -83,12 +83,6 @@ export const FactCard = ({
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                 
-                <div className="absolute top-4 left-4">
-                  <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors])}>
-                    {fact.topic}
-                  </Badge>
-                </div>
-
                 <div className="absolute top-4 right-4 flex gap-2">
                   <Button
                     size="sm"
@@ -108,13 +102,27 @@ export const FactCard = ({
                   </Button>
                 </div>
 
-                <div className="absolute bottom-6 left-6 right-6">
+                <div className="absolute bottom-16 left-6 right-6">
+                  <Badge className={cn("text-white mb-3", topicColors[fact.topic as keyof typeof topicColors])}>
+                    {fact.topic}
+                  </Badge>
                   <h3 className="text-white font-bold text-xl mb-2 leading-tight">
                     {fact.title}
                   </h3>
-                  <p className="text-white/90 text-sm leading-relaxed">
+                  <p className="text-white/90 text-sm leading-relaxed mb-4">
                     {fact.blurb}
                   </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-transparent border-white text-white hover:bg-white hover:text-black"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFlipped(true);
+                    }}
+                  >
+                    Read More
+                  </Button>
                 </div>
               </div>
             </div>
@@ -201,12 +209,6 @@ export const FactCard = ({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           
-          <div className="absolute top-4 left-4">
-            <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors])}>
-              {fact.topic}
-            </Badge>
-          </div>
-
           <div className="absolute top-4 right-4 flex gap-2">
             <Button
               size="sm"
@@ -226,13 +228,27 @@ export const FactCard = ({
             </Button>
           </div>
 
-          <div className="absolute bottom-6 left-6 right-6">
+          <div className="absolute bottom-16 left-6 right-6">
+            <Badge className={cn("text-white mb-3", topicColors[fact.topic as keyof typeof topicColors])}>
+              {fact.topic}
+            </Badge>
             <h3 className="text-white font-bold text-xl mb-2 leading-tight">
               {fact.title}
             </h3>
-            <p className="text-white/90 text-sm leading-relaxed">
+            <p className="text-white/90 text-sm leading-relaxed mb-4">
               {fact.blurb}
             </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-transparent border-white text-white hover:bg-white hover:text-black"
+              onClick={(e) => {
+                e.stopPropagation();
+                setFlipped(true);
+              }}
+            >
+              Read More
+            </Button>
           </div>
         </div>
       </animated.div>

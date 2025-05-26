@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, RefreshCw } from "lucide-react";
-import FactCard from "./FactCard";
+import { FactCard } from "./FactCard";
 import facts from "@/data/facts";
 import { useToast } from "@/hooks/use-toast";
 
