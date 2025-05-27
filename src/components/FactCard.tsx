@@ -1,29 +1,33 @@
 
 import { useState } from 'react';
 import { useSpring, animated } from '@react-spring/web';
-import { useGesture } from '@use-gesture/react';
 import { Bookmark, BookmarkCheck, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Fact } from '@/hooks/useBookmarks';
+import { Fact } from '@/data/facts';
 import { cn } from '@/lib/utils';
 
 interface FactCardProps {
   fact: Fact;
   isBookmarked?: boolean;
+  isCompleted?: boolean;
   onBookmarkToggle?: (fact: Fact) => void;
   onShare?: (fact: Fact) => void;
+  onQuiz?: (fact: Fact) => void;
   className?: string;
 }
 
 export const FactCard = ({ 
   fact, 
-  isBookmarked = false, 
+  isBookmarked = false,
+  isCompleted = false,
   onBookmarkToggle, 
   onShare,
+  onQuiz,
   className 
 }: FactCardProps) => {
   const [flipped, setFlipped] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   const { transform, opacity } = useSpring({
     opacity: flipped ? 1 : 0,
@@ -43,21 +47,54 @@ export const FactCard = ({
     random: 'bg-pink-500'
   };
 
+  const topicEmojis = {
+    science: '🔬',
+    history: '📜',
+    arts: '🎨',
+    space: '🚀',
+    geography: '🌍',
+    random: '🎲'
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy': return 'bg-green-500';
+      case 'medium': return 'bg-yellow-500';
+      case 'hard': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
   const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     onShare?.(fact);
   };
 
   const handleBookmark = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     onBookmarkToggle?.(fact);
   };
 
-  const handleCardClick = () => {
+  const handleQuiz = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onQuiz?.(fact);
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't flip if clicking on buttons
+    if ((e.target as Element).closest('button')) {
+      return;
+    }
+    
     if (!prefersReducedMotion) {
       setFlipped(!flipped);
     }
   };
+
+  const fallbackImage = `https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80`;
 
   if (prefersReducedMotion) {
     return (
@@ -76,17 +113,30 @@ export const FactCard = ({
             >
               <div className="relative h-full">
                 <img 
-                  src={fact.image} 
-                  alt={fact.title}
+                  src={imageError ? fallbackImage : fact.image}
+                  alt={`${fact.topic} illustration`}
                   className="absolute inset-0 w-full h-full object-cover"
+                  onError={() => setImageError(true)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                 
+                {/* XP and Completion Badge */}
+                <div className="absolute top-4 left-4">
+                  <div className="flex gap-2">
+                    <Badge className={cn("text-white", getDifficultyColor(fact.difficulty))}>
+                      +{fact.xpValue} XP
+                    </Badge>
+                    {isCompleted && (
+                      <Badge className="bg-green-500 text-white">✓ Completed</Badge>
+                    )}
+                  </div>
+                </div>
+
                 <div className="absolute top-4 right-4 flex gap-2">
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-white hover:bg-white/20"
+                    className="text-white hover:bg-white/20 pointer-events-auto"
                     onClick={handleBookmark}
                   >
                     {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
@@ -94,7 +144,7 @@ export const FactCard = ({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-white hover:bg-white/20"
+                    className="text-white hover:bg-white/20 pointer-events-auto"
                     onClick={handleShare}
                   >
                     <Share2 className="w-4 h-4" />
@@ -102,31 +152,45 @@ export const FactCard = ({
                 </div>
 
                 <div className="absolute bottom-16 left-6 right-6">
-                  <Badge className={cn("text-white mb-3", topicColors[fact.topic as keyof typeof topicColors])}>
-                    {fact.topic}
-                  </Badge>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">{topicEmojis[fact.topic as keyof typeof topicEmojis]}</span>
+                    <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors])}>
+                      {fact.topic}
+                    </Badge>
+                  </div>
                   <h3 className="text-white font-bold text-xl mb-2 leading-tight">
                     {fact.title}
                   </h3>
                   <p className="text-white/90 text-sm leading-relaxed mb-4">
                     {fact.blurb}
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-transparent border-white text-white hover:bg-white hover:text-black"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFlipped(true);
-                    }}
-                  >
-                    Read More
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-transparent border-white text-white hover:bg-white hover:text-black"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFlipped(true);
+                      }}
+                    >
+                      Read More
+                    </Button>
+                    {fact.quiz && (
+                      <Button
+                        size="sm"
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                        onClick={handleQuiz}
+                      >
+                        Quiz ❓
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           ) : (
-            // Back side
+            // Back side - same content as animated version
             <div 
               className="absolute inset-0 p-6 cursor-pointer bg-white dark:bg-neutral-800"
               onClick={() => setFlipped(false)}
@@ -202,17 +266,30 @@ export const FactCard = ({
       >
         <div className="relative h-full">
           <img 
-            src={fact.image} 
-            alt={fact.title}
+            src={imageError ? fallbackImage : fact.image}
+            alt={`${fact.topic} illustration`}
             className="absolute inset-0 w-full h-full object-cover"
+            onError={() => setImageError(true)}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           
+          {/* XP and Completion Badge */}
+          <div className="absolute top-4 left-4">
+            <div className="flex gap-2">
+              <Badge className={cn("text-white", getDifficultyColor(fact.difficulty))}>
+                +{fact.xpValue} XP
+              </Badge>
+              {isCompleted && (
+                <Badge className="bg-green-500 text-white">✓ Completed</Badge>
+              )}
+            </div>
+          </div>
+
           <div className="absolute top-4 right-4 flex gap-2">
             <Button
               size="sm"
               variant="ghost"
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 pointer-events-auto"
               onClick={handleBookmark}
             >
               {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
@@ -220,7 +297,7 @@ export const FactCard = ({
             <Button
               size="sm"
               variant="ghost"
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 pointer-events-auto"
               onClick={handleShare}
             >
               <Share2 className="w-4 h-4" />
@@ -228,26 +305,40 @@ export const FactCard = ({
           </div>
 
           <div className="absolute bottom-16 left-6 right-6">
-            <Badge className={cn("text-white mb-3", topicColors[fact.topic as keyof typeof topicColors])}>
-              {fact.topic}
-            </Badge>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-2xl">{topicEmojis[fact.topic as keyof typeof topicEmojis]}</span>
+              <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors])}>
+                {fact.topic}
+              </Badge>
+            </div>
             <h3 className="text-white font-bold text-xl mb-2 leading-tight">
               {fact.title}
             </h3>
             <p className="text-white/90 text-sm leading-relaxed mb-4">
               {fact.blurb}
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-transparent border-white text-white hover:bg-white hover:text-black"
-              onClick={(e) => {
-                e.stopPropagation();
-                setFlipped(true);
-              }}
-            >
-              Read More
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-transparent border-white text-white hover:bg-white hover:text-black"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFlipped(true);
+                }}
+              >
+                Read More
+              </Button>
+              {fact.quiz && (
+                <Button
+                  size="sm"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                  onClick={handleQuiz}
+                >
+                  Quiz ❓
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </animated.div>

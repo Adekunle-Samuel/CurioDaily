@@ -1,19 +1,29 @@
 
 import { ReactNode } from 'react';
-import { Sun, Moon, Laptop, Settings, Bookmark, Home } from 'lucide-react';
+import { Sun, Moon, Laptop, Settings, Bookmark, Home, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useTheme, ThemeMode } from '@/hooks/useTheme';
+import { UserProfile } from '@/data/facts';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
   children: ReactNode;
-  currentView: 'today' | 'bookmarks' | 'onboarding';
-  onViewChange: (view: 'today' | 'bookmarks' | 'onboarding') => void;
+  currentView: 'today' | 'leaderboard' | 'bookmarks' | 'onboarding';
+  onViewChange: (view: 'today' | 'leaderboard' | 'bookmarks' | 'onboarding') => void;
   onOpenTopicPicker: () => void;
+  userProfile: UserProfile;
+  getXPProgress: () => {
+    currentLevel: number;
+    xpInCurrentLevel: number;
+    xpForNextLevel: number;
+    progressPercentage: number;
+  };
 }
 
-export const Layout = ({ children, currentView, onViewChange, onOpenTopicPicker }: LayoutProps) => {
+export const Layout = ({ children, currentView, onViewChange, onOpenTopicPicker, userProfile, getXPProgress }: LayoutProps) => {
   const { mode, setMode, isDark } = useTheme();
+  const xpProgress = getXPProgress();
 
   const themeIcons = {
     light: Sun,
@@ -49,7 +59,18 @@ export const Layout = ({ children, currentView, onViewChange, onOpenTopicPicker 
             </h1>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* User Profile & XP */}
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-3 bg-white/50 dark:bg-neutral-800/50 backdrop-blur-sm rounded-full px-4 py-2">
+              <span className="text-lg">{userProfile.avatar}</span>
+              <div className="text-right">
+                <div className="text-sm font-semibold">{userProfile.displayName}</div>
+                <Badge className="bg-emerald-500 text-white text-xs">
+                  Lv.{xpProgress.currentLevel} • {userProfile.totalXP} XP
+                </Badge>
+              </div>
+            </div>
+            
             <Button
               variant="ghost"
               size="sm"
@@ -80,7 +101,7 @@ export const Layout = ({ children, currentView, onViewChange, onOpenTopicPicker 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-lg border-t border-neutral-200 dark:border-neutral-700">
         <div className="max-w-6xl mx-auto px-4 py-2">
-          <div className="flex justify-center gap-8">
+          <div className="flex justify-center gap-4">
             <Button
               variant={currentView === 'today' ? 'default' : 'ghost'}
               size="sm"
@@ -92,6 +113,19 @@ export const Layout = ({ children, currentView, onViewChange, onOpenTopicPicker 
             >
               <Home className="w-5 h-5" />
               <span className="text-xs">Today</span>
+            </Button>
+            
+            <Button
+              variant={currentView === 'leaderboard' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => onViewChange('leaderboard')}
+              className={cn(
+                "flex flex-col items-center gap-1 h-auto py-2 px-4",
+                currentView === 'leaderboard' && "bg-gradient-to-r from-emerald-500 to-green-600 text-white"
+              )}
+            >
+              <Trophy className="w-5 h-5" />
+              <span className="text-xs">Leaderboard</span>
             </Button>
             
             <Button

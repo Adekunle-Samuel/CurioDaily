@@ -5,22 +5,23 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Layout } from '@/components/Layout';
-import { FactCard } from '@/components/FactCard';
+import { TodayDeck } from '@/components/TodayDeck';
+import { Leaderboard } from '@/components/Leaderboard';
 import { TopicPicker } from '@/components/TopicPicker';
 import { BookmarkGrid } from '@/components/BookmarkGrid';
 import { Onboarding } from '@/components/Onboarding';
-import { useBookmarks, Fact } from '@/hooks/useBookmarks';
+import { useBookmarks } from '@/hooks/useBookmarks';
+import { useGameification } from '@/hooks/useGameification';
 import { useToast } from '@/hooks/use-toast';
 
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const [currentView, setCurrentView] = useState<'today' | 'bookmarks' | 'onboarding'>('today');
+  const [currentView, setCurrentView] = useState<'today' | 'leaderboard' | 'bookmarks' | 'onboarding'>('today');
   const [showTopicPicker, setShowTopicPicker] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [facts, setFacts] = useState<Fact[]>([]);
-  const [todaysFact, setTodaysFact] = useState<Fact | null>(null);
-  const { bookmarks, addBookmark, removeBookmark, isBookmarked } = useBookmarks();
+  const { bookmarks, removeBookmark } = useBookmarks();
+  const { userProfile, leaderboard, getXPProgress } = useGameification();
   const { toast } = useToast();
 
   // Check if onboarding is complete
@@ -35,37 +36,7 @@ function AppContent() {
     }
   }, []);
 
-  // Load facts from JSON
-  useEffect(() => {
-    fetch('/facts.json')
-      .then(res => res.json())
-      .then((data: Fact[]) => {
-        setFacts(data);
-        // Set today's fact (for demo, just pick first one)
-        if (data.length > 0) {
-          setTodaysFact(data[0]);
-        }
-      })
-      .catch(err => console.error('Failed to load facts:', err));
-  }, []);
-
-  const handleBookmarkToggle = (fact: Fact) => {
-    if (isBookmarked(fact.id)) {
-      removeBookmark(fact.id);
-      toast({
-        title: "Bookmark removed",
-        description: "Fact removed from your collection",
-      });
-    } else {
-      addBookmark(fact);
-      toast({
-        title: "Fact bookmarked!",
-        description: "Added to your collection",
-      });
-    }
-  };
-
-  const handleShare = async (fact: Fact) => {
+  const handleShare = async (fact: any) => {
     if (navigator.share) {
       try {
         await navigator.share({
@@ -77,7 +48,6 @@ function AppContent() {
         console.log('Share cancelled');
       }
     } else {
-      // Fallback: copy to clipboard
       await navigator.clipboard.writeText(`${fact.title}\n\n${fact.blurb}\n\nDiscover more at ${window.location.href}`);
       toast({
         title: "Copied to clipboard!",
@@ -99,24 +69,27 @@ function AppContent() {
       currentView={currentView}
       onViewChange={setCurrentView}
       onOpenTopicPicker={() => setShowTopicPicker(true)}
+      userProfile={userProfile}
+      getXPProgress={getXPProgress}
     >
-      {currentView === 'today' && (
-        <div className="flex justify-center py-8">
-          {todaysFact ? (
-            <FactCard
-              fact={todaysFact}
-              isBookmarked={isBookmarked(todaysFact.id)}
-              onBookmarkToggle={handleBookmarkToggle}
-              onShare={handleShare}
-            />
-          ) : (
-            <div className="text-center py-16">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center animate-pulse">
-                <span className="text-2xl">🤔</span>
-              </div>
-              <p className="text-neutral-600 dark:text-neutral-400">Loading today's fact...</p>
-            </div>
-          )}
+      {currentView === 'today' && <TodayDeck />}
+
+      {currentView === 'leaderboard' && (
+        <div className="py-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-2">
+              Leaderboard
+            </h2>
+            <p className="text-neutral-600 dark:text-neutral-400">
+              See how you rank among fellow knowledge seekers
+            </p>
+          </div>
+          
+          <Leaderboard
+            userProfile={userProfile}
+            leaderboard={leaderboard}
+            getXPProgress={getXPProgress}
+          />
         </div>
       )}
 
