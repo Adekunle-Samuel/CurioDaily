@@ -9,6 +9,7 @@ import { TodayDeck } from '@/components/TodayDeck';
 import { Leaderboard } from '@/components/Leaderboard';
 import { TopicPicker } from '@/components/TopicPicker';
 import { BookmarkGrid } from '@/components/BookmarkGrid';
+import { FactHistory } from '@/components/FactHistory';
 import { Onboarding } from '@/components/Onboarding';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { useGameification } from '@/hooks/useGameification';
@@ -17,7 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const [currentView, setCurrentView] = useState<'today' | 'leaderboard' | 'bookmarks' | 'onboarding'>('today');
+  const [currentView, setCurrentView] = useState<'today' | 'leaderboard' | 'bookmarks' | 'history' | 'onboarding'>('today');
   const [showTopicPicker, setShowTopicPicker] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const { bookmarks, removeBookmark } = useBookmarks();
@@ -109,6 +110,21 @@ function AppContent() {
             onRemoveBookmark={removeBookmark}
             onShare={handleShare}
           />
+        </div>
+      )}
+
+      {currentView === 'history' && (
+        <div className="py-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-2">
+              Fact History
+            </h2>
+            <p className="text-neutral-600 dark:text-neutral-400">
+              Track your learning journey and progress
+            </p>
+          </div>
+          
+          <FactHistory />
         </div>
       )}
 

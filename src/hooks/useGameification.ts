@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Fact, UserProfile } from '@/data/facts';
+import { useFactProgress } from './useFactProgress';
 
 export const useGameification = () => {
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -14,6 +15,7 @@ export const useGameification = () => {
   });
   
   const [leaderboard, setLeaderboard] = useState<UserProfile[]>([]);
+  const { markQuizAttempt, markFactAsViewed } = useFactProgress();
 
   useEffect(() => {
     const stored = localStorage.getItem('curio-user-profile');
@@ -44,7 +46,14 @@ export const useGameification = () => {
     setUserProfile(updatedProfile);
     localStorage.setItem('curio-user-profile', JSON.stringify(updatedProfile));
     
+    // Track quiz attempt in fact progress
+    markQuizAttempt(fact.id, isCorrect);
+    
     return { xpGained, isCorrect };
+  };
+
+  const viewFact = (factId: number) => {
+    markFactAsViewed(factId);
   };
 
   const getXPProgress = () => {
@@ -68,6 +77,7 @@ export const useGameification = () => {
     userProfile,
     leaderboard,
     completeQuiz,
+    viewFact,
     getXPProgress,
     isFactCompleted
   };

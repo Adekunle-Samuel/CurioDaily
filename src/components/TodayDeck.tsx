@@ -10,27 +10,31 @@ import facts from '@/data/facts';
 import { useToast } from '@/hooks/use-toast';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { useGameification } from '@/hooks/useGameification';
+import { useFactProgress } from '@/hooks/useFactProgress';
 
 export const TodayDeck = () => {
   const [todaysFacts, setTodaysFacts] = useState<Fact[]>([]);
   const [selectedQuizFact, setSelectedQuizFact] = useState<Fact | null>(null);
   const { toast } = useToast();
   const { bookmarks, addBookmark, removeBookmark, isBookmarked } = useBookmarks();
-  const { userProfile, completeQuiz, isFactCompleted } = useGameification();
+  const { userProfile, completeQuiz, isFactCompleted, viewFact } = useGameification();
+  const { getFactsToShow } = useFactProgress();
 
   useEffect(() => {
     generateTodaysFacts();
   }, []);
 
   const generateTodaysFacts = () => {
-    // Get 3 random facts from different topics
-    const shuffled = [...facts].sort(() => 0.5 - Math.random());
-    const selectedFacts = shuffled.slice(0, 3);
+    // Get facts using smart selection based on user progress and preferences
+    const selectedFacts = getFactsToShow(facts, userProfile.preferredTopics);
     setTodaysFacts(selectedFacts);
+    
+    // Mark facts as viewed
+    selectedFacts.forEach(fact => viewFact(fact.id));
     
     toast({
       title: "Fresh facts loaded!",
-      description: "Discover 3 fascinating new facts today.",
+      description: "Discover fascinating new facts today.",
     });
   };
 
@@ -108,7 +112,7 @@ export const TodayDeck = () => {
           Today's Discovery Deck
         </h2>
         <p className="text-neutral-600 dark:text-neutral-400 mb-4">
-          3 fascinating facts to expand your knowledge
+          Curated facts based on your learning journey
         </p>
         <Button 
           onClick={generateTodaysFacts}
