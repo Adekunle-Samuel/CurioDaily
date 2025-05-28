@@ -65,10 +65,32 @@ export const FactCard = ({
     }
   };
 
-  const handleShare = (e: React.MouseEvent) => {
+  const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onShare?.(fact);
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: fact.title,
+          text: fact.blurb,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(`${fact.title}\n\n${fact.blurb}\n\nDiscover more at ${window.location.href}`);
+        // Let parent handle toast notification
+        onShare?.(fact);
+      }
+    } catch (err) {
+      console.log('Share operation failed or was cancelled');
+      // Fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(`${fact.title}\n\n${fact.blurb}\n\nDiscover more at ${window.location.href}`);
+        onShare?.(fact);
+      } catch (clipboardErr) {
+        console.error('Failed to copy to clipboard');
+      }
+    }
   };
 
   const handleBookmark = (e: React.MouseEvent) => {
@@ -84,8 +106,9 @@ export const FactCard = ({
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't flip if clicking on buttons
-    if ((e.target as Element).closest('button')) {
+    // Don't flip if clicking on buttons or their children
+    const target = e.target as Element;
+    if (target.closest('button') || target.closest('[role="button"]')) {
       return;
     }
     
@@ -261,7 +284,8 @@ export const FactCard = ({
         style={{
           opacity: opacity.to(o => 1 - o),
           transform,
-          rotateY: '0deg'
+          rotateY: '0deg',
+          pointerEvents: flipped ? 'none' : 'auto'
         }}
       >
         <div className="relative h-full">
@@ -285,11 +309,11 @@ export const FactCard = ({
             </div>
           </div>
 
-          <div className="absolute top-4 right-4 flex gap-2">
+          <div className="absolute top-4 right-4 flex gap-2" style={{ pointerEvents: 'auto' }}>
             <Button
               size="sm"
               variant="ghost"
-              className="text-white hover:bg-white/20 pointer-events-auto"
+              className="text-white hover:bg-white/20"
               onClick={handleBookmark}
             >
               {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
@@ -297,7 +321,7 @@ export const FactCard = ({
             <Button
               size="sm"
               variant="ghost"
-              className="text-white hover:bg-white/20 pointer-events-auto"
+              className="text-white hover:bg-white/20"
               onClick={handleShare}
             >
               <Share2 className="w-4 h-4" />
@@ -317,7 +341,7 @@ export const FactCard = ({
             <p className="text-white/90 text-sm leading-relaxed mb-4">
               {fact.blurb}
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-2" style={{ pointerEvents: 'auto' }}>
               <Button
                 variant="outline"
                 size="sm"
@@ -329,15 +353,13 @@ export const FactCard = ({
               >
                 Read More
               </Button>
-              {fact.quiz && (
-                <Button
-                  size="sm"
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white"
-                  onClick={handleQuiz}
-                >
-                  Quiz ❓
-                </Button>
-              )}
+              <Button
+                size="sm"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                onClick={handleQuiz}
+              >
+                Quiz ❓
+              </Button>
             </div>
           </div>
         </div>
@@ -349,7 +371,8 @@ export const FactCard = ({
         style={{
           opacity,
           transform,
-          rotateY: '180deg'
+          rotateY: '180deg',
+          pointerEvents: flipped ? 'auto' : 'none'
         }}
       >
         <div className="h-full flex flex-col">
