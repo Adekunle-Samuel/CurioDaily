@@ -14,15 +14,14 @@ import { useFactProgress } from '@/hooks/useFactProgress';
 import { generateContextualImage } from '@/services/runware';
 import { ShareModal } from './ShareModal';
 
-// Temporary API Key input (in production, use environment variables or Supabase secrets)
-const TEMPORARY_API_KEY = '';
+// Hardcoded API Key for automatic functionality
+const RUNWARE_API_KEY = 'MH9tvl5oBifxOJ2GwK0HRTCGkNydwWNK';
 
 export const TodayDeck = () => {
   const [todaysFacts, setTodaysFacts] = useState<Fact[]>([]);
   const [selectedQuizFact, setSelectedQuizFact] = useState<Fact | null>(null);
   const [shareModalFact, setShareModalFact] = useState<Fact | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [apiKey, setApiKey] = useState<string>(TEMPORARY_API_KEY);
   
   const { toast } = useToast();
   const { bookmarks, addBookmark, removeBookmark, isBookmarked } = useBookmarks();
@@ -39,22 +38,18 @@ export const TodayDeck = () => {
     // Get facts using smart selection based on user progress and preferences
     const selectedFacts = getFactsToShow(facts, userProfile.preferredTopics);
     
-    // Potentially generate contextual images if API key is available
-    if (apiKey) {
-      const factsWithGeneratedImages = await Promise.all(selectedFacts.map(async (fact) => {
-        try {
-          const imageUrl = await generateContextualImage(fact.title, fact.topic, apiKey);
-          return imageUrl ? { ...fact, image: imageUrl } : fact;
-        } catch (error) {
-          console.error('Error generating image:', error);
-          return fact;
-        }
-      }));
-      
-      setTodaysFacts(factsWithGeneratedImages);
-    } else {
-      setTodaysFacts(selectedFacts);
-    }
+    // Generate contextual images automatically with API key
+    const factsWithGeneratedImages = await Promise.all(selectedFacts.map(async (fact) => {
+      try {
+        const imageUrl = await generateContextualImage(fact.title, fact.topic, RUNWARE_API_KEY);
+        return imageUrl ? { ...fact, image: imageUrl } : fact;
+      } catch (error) {
+        console.error('Error generating image:', error);
+        return fact;
+      }
+    }));
+    
+    setTodaysFacts(factsWithGeneratedImages);
     
     // Mark facts as viewed
     selectedFacts.forEach(fact => viewFact(fact.id));
@@ -137,25 +132,6 @@ export const TodayDeck = () => {
           {isRefreshing ? 'Refreshing...' : 'New Facts'}
         </Button>
       </div>
-
-      {/* API Key Input (temporary) */}
-      {!TEMPORARY_API_KEY && (
-        <div className="max-w-md mx-auto p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-          <p className="text-sm text-blue-600 dark:text-blue-300 mb-2">
-            For AI-generated contextual images, enter your Runware API key:
-          </p>
-          <input
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            className="w-full p-2 border rounded-lg bg-white dark:bg-neutral-800 text-sm mb-2"
-            placeholder="Enter Runware API Key"
-          />
-          <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            You can get a key at <a href="https://runware.ai" target="_blank" rel="noreferrer" className="underline">runware.ai</a>
-          </p>
-        </div>
-      )}
 
       {/* Facts Carousel */}
       <div className="relative max-w-2xl mx-auto">

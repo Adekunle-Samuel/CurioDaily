@@ -193,9 +193,8 @@ export const FactCard = ({
                   </p>
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
                       size="sm"
-                      className="rounded-xl bg-transparent border-white text-white hover:bg-white hover:text-black"
+                      className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
                       onClick={(e) => {
                         e.stopPropagation();
                         setFlipped(true);
@@ -205,8 +204,9 @@ export const FactCard = ({
                     </Button>
                     {fact.quiz && (
                       <Button
+                        variant="outline"
                         size="sm"
-                        className="rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white"
+                        className="rounded-xl bg-transparent border-white text-white hover:bg-white hover:text-black"
                         onClick={handleQuiz}
                       >
                         Quiz ❓
@@ -347,9 +347,8 @@ export const FactCard = ({
             </p>
             <div className="flex gap-2" style={{ pointerEvents: 'auto' }}>
               <Button
-                variant="outline"
                 size="sm"
-                className="bg-transparent border-white text-white hover:bg-white hover:text-black rounded-xl"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl"
                 onClick={(e) => {
                   e.stopPropagation();
                   setFlipped(true);
@@ -359,8 +358,9 @@ export const FactCard = ({
               </Button>
               {fact.quiz && (
                 <Button
+                  variant="outline"
                   size="sm"
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
+                  className="bg-transparent border-white text-white hover:bg-white hover:text-black rounded-xl"
                   onClick={handleQuiz}
                 >
                   Quiz ❓

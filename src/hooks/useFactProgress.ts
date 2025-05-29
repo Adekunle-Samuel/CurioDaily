@@ -80,9 +80,10 @@ export const useFactProgress = () => {
       const newQuizAttempts = existingProgress.quizAttempts + 1;
       let newStatus = existingProgress.status;
       
-      // Mark as quizzed after first attempt, mastered after 2 correct answers
-      if (newQuizAttempts === 1) newStatus = 'quizzed';
-      if (newCorrectAnswers >= 2) newStatus = 'mastered';
+      // Mark as quizzed after first attempt, mastered only if answered correctly on first try
+      if (newQuizAttempts === 1) {
+        newStatus = isCorrect ? 'mastered' : 'quizzed';
+      }
       
       const updatedProgress = factProgress.map(p => 
         p.factId === factId 
@@ -100,7 +101,7 @@ export const useFactProgress = () => {
     } else {
       const newProgress: UserFactProgress = {
         factId,
-        status: isCorrect ? 'quizzed' : 'viewed',
+        status: isCorrect ? 'mastered' : 'quizzed',
         viewCount: 1,
         quizAttempts: 1,
         correctAnswers: isCorrect ? 1 : 0,
@@ -117,26 +118,26 @@ export const useFactProgress = () => {
   };
 
   const getFactsToShow = (allFacts: any[], preferredTopics: string[] = []) => {
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    
     console.log('Getting facts to show, preferred topics:', preferredTopics);
     console.log('Current progress state:', factProgress);
     
-    // Get facts that haven't been viewed or haven't been shown recently
+    // Only show facts that have never been viewed or quizzed
     const availableFacts = allFacts.filter(fact => {
       const progress = getFactProgress(fact.id);
       
-      if (!progress) return true; // Never viewed
-      if (progress.status === 'mastered') return false; // Don't show mastered facts
+      // If no progress exists, fact can be shown
+      if (!progress) return true;
       
-      // Don't show recently viewed facts (30-day cooldown for completed facts)
-      if (progress.status === 'quizzed' && progress.lastViewed > thirtyDaysAgo) {
-        return false;
-      }
+      // Never show facts that have been quizzed or mastered
+      if (progress.status === 'quizzed' || progress.status === 'mastered') return false;
+      
+      // Never show facts that have been viewed (they get only one chance)
+      if (progress.status === 'viewed') return false;
       
       return true;
     });
+    
+    console.log('Available facts after filtering:', availableFacts.length);
     
     // Always use a random selection for better variety
     const shuffledFacts = [...availableFacts].sort(() => 0.5 - Math.random());
