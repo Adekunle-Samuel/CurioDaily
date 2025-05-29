@@ -1,15 +1,6 @@
 
 import { useState, useEffect } from 'react';
-
-export interface Fact {
-  id: number;
-  title: string;
-  blurb: string;
-  body: string;
-  topic: string;
-  image: string;
-  sources: string[];
-}
+import { Fact } from '@/data/facts';
 
 export const useBookmarks = () => {
   const [bookmarks, setBookmarks] = useState<Fact[]>([]);

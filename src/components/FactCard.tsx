@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useSpring, animated } from '@react-spring/web';
 import { Bookmark, BookmarkCheck, Share2 } from 'lucide-react';
@@ -44,6 +43,9 @@ export const FactCard = ({
     arts: 'bg-purple-500',
     space: 'bg-indigo-500',
     geography: 'bg-emerald-500',
+    technology: 'bg-cyan-500',
+    nature: 'bg-green-500',
+    psychology: 'bg-violet-500',
     random: 'bg-pink-500'
   };
 
@@ -53,6 +55,9 @@ export const FactCard = ({
     arts: '🎨',
     space: '🚀',
     geography: '🌍',
+    technology: '💻',
+    nature: '🌿',
+    psychology: '🧠',
     random: '🎲'
   };
 
@@ -63,6 +68,16 @@ export const FactCard = ({
       case 'hard': return 'bg-red-500';
       default: return 'bg-gray-500';
     }
+  };
+
+  const formatSource = (source: any) => {
+    if (typeof source === 'string') return source;
+    
+    let formatted = source.title;
+    if (source.author) formatted += ` by ${source.author}`;
+    if (source.publication) formatted += ` - ${source.publication}`;
+    if (source.year) formatted += ` (${source.year})`;
+    return formatted;
   };
 
   const handleShare = async (e: React.MouseEvent) => {
@@ -78,12 +93,10 @@ export const FactCard = ({
         });
       } else {
         await navigator.clipboard.writeText(`${fact.title}\n\n${fact.blurb}\n\nDiscover more at ${window.location.href}`);
-        // Let parent handle toast notification
         onShare?.(fact);
       }
     } catch (err) {
       console.log('Share operation failed or was cancelled');
-      // Fallback to clipboard
       try {
         await navigator.clipboard.writeText(`${fact.title}\n\n${fact.blurb}\n\nDiscover more at ${window.location.href}`);
         onShare?.(fact);
@@ -106,7 +119,6 @@ export const FactCard = ({
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't flip if clicking on buttons or their children
     const target = e.target as Element;
     if (target.closest('button') || target.closest('[role="button"]')) {
       return;
@@ -129,7 +141,6 @@ export const FactCard = ({
       )}>
         <div className="relative h-full">
           {!flipped ? (
-            // Front side
             <div 
               className="absolute inset-0 cursor-pointer"
               onClick={() => setFlipped(true)}
@@ -143,7 +154,6 @@ export const FactCard = ({
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                 
-                {/* XP and Completion Badge */}
                 <div className="absolute top-4 left-4">
                   <div className="flex gap-2">
                     <Badge className={cn("text-white", getDifficultyColor(fact.difficulty))}>
@@ -176,8 +186,8 @@ export const FactCard = ({
 
                 <div className="absolute bottom-16 left-6 right-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-2xl">{topicEmojis[fact.topic as keyof typeof topicEmojis]}</span>
-                    <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors])}>
+                    <span className="text-2xl">{topicEmojis[fact.topic as keyof typeof topicEmojis] || '🎲'}</span>
+                    <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors] || 'bg-gray-500')}>
                       {fact.topic}
                     </Badge>
                   </div>
@@ -213,14 +223,13 @@ export const FactCard = ({
               </div>
             </div>
           ) : (
-            // Back side - same content as animated version
             <div 
               className="absolute inset-0 p-6 cursor-pointer bg-white dark:bg-neutral-800"
               onClick={() => setFlipped(false)}
             >
               <div className="h-full flex flex-col">
                 <div className="flex justify-between items-start mb-4">
-                  <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors])}>
+                  <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors] || 'bg-gray-500')}>
                     {fact.topic}
                   </Badge>
                   <div className="flex gap-2">
@@ -256,7 +265,7 @@ export const FactCard = ({
                     </h4>
                     <ul className="text-xs text-neutral-500 dark:text-neutral-400 space-y-1">
                       {fact.sources.map((source, index) => (
-                        <li key={index}>• {source}</li>
+                        <li key={index}>• {formatSource(source)}</li>
                       ))}
                     </ul>
                   </div>
@@ -297,7 +306,6 @@ export const FactCard = ({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           
-          {/* XP and Completion Badge */}
           <div className="absolute top-4 left-4">
             <div className="flex gap-2">
               <Badge className={cn("text-white", getDifficultyColor(fact.difficulty))}>
@@ -330,8 +338,8 @@ export const FactCard = ({
 
           <div className="absolute bottom-16 left-6 right-6">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">{topicEmojis[fact.topic as keyof typeof topicEmojis]}</span>
-              <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors])}>
+              <span className="text-2xl">{topicEmojis[fact.topic as keyof typeof topicEmojis] || '🎲'}</span>
+              <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors] || 'bg-gray-500')}>
                 {fact.topic}
               </Badge>
             </div>
@@ -353,13 +361,15 @@ export const FactCard = ({
               >
                 Read More
               </Button>
-              <Button
-                size="sm"
-                className="bg-emerald-500 hover:bg-emerald-600 text-white"
-                onClick={handleQuiz}
-              >
-                Quiz ❓
-              </Button>
+              {fact.quiz && (
+                <Button
+                  size="sm"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                  onClick={handleQuiz}
+                >
+                  Quiz ❓
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -377,7 +387,7 @@ export const FactCard = ({
       >
         <div className="h-full flex flex-col">
           <div className="flex justify-between items-start mb-4">
-            <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors])}>
+            <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors] || 'bg-gray-500')}>
               {fact.topic}
             </Badge>
             <div className="flex gap-2">
@@ -413,7 +423,7 @@ export const FactCard = ({
               </h4>
               <ul className="text-xs text-neutral-500 dark:text-neutral-400 space-y-1">
                 {fact.sources.map((source, index) => (
-                  <li key={index}>• {source}</li>
+                  <li key={index}>• {formatSource(source)}</li>
                 ))}
               </ul>
             </div>
