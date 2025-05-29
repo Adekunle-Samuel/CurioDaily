@@ -2,7 +2,7 @@
 import { Share2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Fact } from '@/hooks/useBookmarks';
+import { Fact } from '@/data/facts';
 import { cn } from '@/lib/utils';
 
 interface BookmarkGridProps {

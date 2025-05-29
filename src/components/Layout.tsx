@@ -1,6 +1,6 @@
 
 import { ReactNode } from 'react';
-import { Sun, Moon, Laptop, Settings, Bookmark, Home, Trophy } from 'lucide-react';
+import { Sun, Moon, Laptop, Settings, Bookmark, Home, Trophy, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTheme, ThemeMode } from '@/hooks/useTheme';
@@ -9,8 +9,8 @@ import { cn } from '@/lib/utils';
 
 interface LayoutProps {
   children: ReactNode;
-  currentView: 'today' | 'leaderboard' | 'bookmarks' | 'onboarding';
-  onViewChange: (view: 'today' | 'leaderboard' | 'bookmarks' | 'onboarding') => void;
+  currentView: 'today' | 'leaderboard' | 'bookmarks' | 'history' | 'onboarding';
+  onViewChange: (view: 'today' | 'leaderboard' | 'bookmarks' | 'history' | 'onboarding') => void;
   onOpenTopicPicker: () => void;
   userProfile: UserProfile;
   getXPProgress: () => {
@@ -101,17 +101,17 @@ export const Layout = ({ children, currentView, onViewChange, onOpenTopicPicker,
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-lg border-t border-neutral-200 dark:border-neutral-700">
         <div className="max-w-6xl mx-auto px-4 py-2">
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-2">
             <Button
               variant={currentView === 'today' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => onViewChange('today')}
               className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2 px-4",
+                "flex flex-col items-center gap-1 h-auto py-2 px-3",
                 currentView === 'today' && "bg-gradient-to-r from-sky-500 to-blue-600 text-white"
               )}
             >
-              <Home className="w-5 h-5" />
+              <Home className="w-4 h-4" />
               <span className="text-xs">Today</span>
             </Button>
             
@@ -120,12 +120,12 @@ export const Layout = ({ children, currentView, onViewChange, onOpenTopicPicker,
               size="sm"
               onClick={() => onViewChange('leaderboard')}
               className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2 px-4",
+                "flex flex-col items-center gap-1 h-auto py-2 px-3",
                 currentView === 'leaderboard' && "bg-gradient-to-r from-emerald-500 to-green-600 text-white"
               )}
             >
-              <Trophy className="w-5 h-5" />
-              <span className="text-xs">Leaderboard</span>
+              <Trophy className="w-4 h-4" />
+              <span className="text-xs">Ranks</span>
             </Button>
             
             <Button
@@ -133,12 +133,25 @@ export const Layout = ({ children, currentView, onViewChange, onOpenTopicPicker,
               size="sm"
               onClick={() => onViewChange('bookmarks')}
               className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2 px-4",
+                "flex flex-col items-center gap-1 h-auto py-2 px-3",
                 currentView === 'bookmarks' && "bg-gradient-to-r from-sky-500 to-blue-600 text-white"
               )}
             >
-              <Bookmark className="w-5 h-5" />
+              <Bookmark className="w-4 h-4" />
               <span className="text-xs">Saved</span>
+            </Button>
+            
+            <Button
+              variant={currentView === 'history' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => onViewChange('history')}
+              className={cn(
+                "flex flex-col items-center gap-1 h-auto py-2 px-3",
+                currentView === 'history' && "bg-gradient-to-r from-purple-500 to-violet-600 text-white"
+              )}
+            >
+              <History className="w-4 h-4" />
+              <span className="text-xs">History</span>
             </Button>
           </div>
         </div>
