@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { X, Sparkles, Atom, Clock, Palette, Rocket } from 'lucide-react';
+import { X, Sparkles, Atom, Clock, Palette, Rocket, Trophy, Users, Music, Drama, Gamepad2, Globe, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -16,7 +16,14 @@ const topics = [
   { id: 'history', label: 'History', icon: Clock, color: 'bg-amber-500 hover:bg-amber-600' },
   { id: 'arts', label: 'Arts', icon: Palette, color: 'bg-purple-500 hover:bg-purple-600' },
   { id: 'space', label: 'Space', icon: Rocket, color: 'bg-indigo-500 hover:bg-indigo-600' },
-  { id: 'random', label: 'Random', icon: Sparkles, color: 'bg-pink-500 hover:bg-pink-600' },
+  { id: 'sports', label: 'Sports', icon: Trophy, color: 'bg-emerald-500 hover:bg-emerald-600' },
+  { id: 'politics', label: 'Politics', icon: Users, color: 'bg-red-500 hover:bg-red-600' },
+  { id: 'music', label: 'Music', icon: Music, color: 'bg-pink-500 hover:bg-pink-600' },
+  { id: 'technology', label: 'Technology', icon: Gamepad2, color: 'bg-cyan-500 hover:bg-cyan-600' },
+  { id: 'geography', label: 'Geography', icon: Globe, color: 'bg-green-500 hover:bg-green-600' },
+  { id: 'nature', label: 'Nature', icon: Heart, color: 'bg-teal-500 hover:bg-teal-600' },
+  { id: 'psychology', label: 'Psychology', icon: Drama, color: 'bg-violet-500 hover:bg-violet-600' },
+  { id: 'random', label: 'Random', icon: Sparkles, color: 'bg-orange-500 hover:bg-orange-600' },
 ];
 
 export const TopicPicker = ({ isOpen, onClose, selectedTopics, onTopicsChange }: TopicPickerProps) => {
@@ -38,7 +45,7 @@ export const TopicPicker = ({ isOpen, onClose, selectedTopics, onTopicsChange }:
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="relative w-full max-w-md bg-white dark:bg-neutral-800 rounded-2xl shadow-glass backdrop-blur-sm overflow-hidden">
+      <div className="relative w-full max-w-2xl bg-white dark:bg-neutral-800 rounded-2xl shadow-glass backdrop-blur-sm overflow-hidden">
         <div className="relative bg-gradient-to-r from-sky-500 to-blue-600 p-6 text-white">
           <button
             onClick={onClose}
@@ -54,7 +61,7 @@ export const TopicPicker = ({ isOpen, onClose, selectedTopics, onTopicsChange }:
         </div>
 
         <div className="p-6">
-          <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6">
             {topics.map(topic => {
               const isSelected = localSelected.includes(topic.id);
               const Icon = topic.icon;
@@ -85,13 +92,13 @@ export const TopicPicker = ({ isOpen, onClose, selectedTopics, onTopicsChange }:
             <Button
               variant="outline"
               onClick={onClose}
-              className="flex-1"
+              className="flex-1 rounded-xl"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSave}
-              className="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white border-none"
+              className="flex-1 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white border-none"
               disabled={localSelected.length === 0}
             >
               Save ({localSelected.length})

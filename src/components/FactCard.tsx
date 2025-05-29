@@ -46,7 +46,10 @@ export const FactCard = ({
     technology: 'bg-cyan-500',
     nature: 'bg-green-500',
     psychology: 'bg-violet-500',
-    random: 'bg-pink-500'
+    sports: 'bg-emerald-500',
+    politics: 'bg-red-500',
+    music: 'bg-pink-500',
+    random: 'bg-orange-500'
   };
 
   const topicEmojis = {
@@ -58,6 +61,9 @@ export const FactCard = ({
     technology: '💻',
     nature: '🌿',
     psychology: '🧠',
+    sports: '🏆',
+    politics: '👥',
+    music: '🎵',
     random: '🎲'
   };
 
@@ -73,37 +79,23 @@ export const FactCard = ({
   const formatSource = (source: any) => {
     if (typeof source === 'string') return source;
     
-    let formatted = source.title;
-    if (source.author) formatted += ` by ${source.author}`;
-    if (source.publication) formatted += ` - ${source.publication}`;
-    if (source.year) formatted += ` (${source.year})`;
-    return formatted;
+    let formatted = '';
+    
+    if (source.title) formatted += source.title;
+    if (source.author) formatted += formatted ? ` by ${source.author}` : source.author;
+    if (source.publication) formatted += formatted ? ` - ${source.publication}` : source.publication;
+    if (source.year) formatted += formatted ? ` (${source.year})` : `(${source.year})`;
+    if (source.url) formatted += formatted ? ` [${source.url}]` : source.url;
+    if (source.doi) formatted += formatted ? ` DOI: ${source.doi}` : `DOI: ${source.doi}`;
+    if (source.type) formatted += formatted ? ` [${source.type}]` : `[${source.type}]`;
+    
+    return formatted || "Unknown source";
   };
 
-  const handleShare = async (e: React.MouseEvent) => {
+  const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: fact.title,
-          text: fact.blurb,
-          url: window.location.href,
-        });
-      } else {
-        await navigator.clipboard.writeText(`${fact.title}\n\n${fact.blurb}\n\nDiscover more at ${window.location.href}`);
-        onShare?.(fact);
-      }
-    } catch (err) {
-      console.log('Share operation failed or was cancelled');
-      try {
-        await navigator.clipboard.writeText(`${fact.title}\n\n${fact.blurb}\n\nDiscover more at ${window.location.href}`);
-        onShare?.(fact);
-      } catch (clipboardErr) {
-        console.error('Failed to copy to clipboard');
-      }
-    }
+    onShare?.(fact);
   };
 
   const handleBookmark = (e: React.MouseEvent) => {
@@ -130,6 +122,8 @@ export const FactCard = ({
   };
 
   const fallbackImage = `https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80`;
+  const topicColor = topicColors[fact.topic as keyof typeof topicColors] || 'bg-gray-500';
+  const topicEmoji = topicEmojis[fact.topic as keyof typeof topicEmojis] || '🎲';
 
   if (prefersReducedMotion) {
     return (
@@ -169,7 +163,7 @@ export const FactCard = ({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-white hover:bg-white/20 pointer-events-auto"
+                    className="text-white hover:bg-white/20 pointer-events-auto rounded-full"
                     onClick={handleBookmark}
                   >
                     {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
@@ -177,7 +171,7 @@ export const FactCard = ({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-white hover:bg-white/20 pointer-events-auto"
+                    className="text-white hover:bg-white/20 pointer-events-auto rounded-full"
                     onClick={handleShare}
                   >
                     <Share2 className="w-4 h-4" />
@@ -186,8 +180,8 @@ export const FactCard = ({
 
                 <div className="absolute bottom-16 left-6 right-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-2xl">{topicEmojis[fact.topic as keyof typeof topicEmojis] || '🎲'}</span>
-                    <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors] || 'bg-gray-500')}>
+                    <span className="text-2xl">{topicEmoji}</span>
+                    <Badge className={cn("text-white", topicColor)}>
                       {fact.topic}
                     </Badge>
                   </div>
@@ -201,7 +195,7 @@ export const FactCard = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="bg-transparent border-white text-white hover:bg-white hover:text-black"
+                      className="rounded-xl bg-transparent border-white text-white hover:bg-white hover:text-black"
                       onClick={(e) => {
                         e.stopPropagation();
                         setFlipped(true);
@@ -212,7 +206,7 @@ export const FactCard = ({
                     {fact.quiz && (
                       <Button
                         size="sm"
-                        className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                        className="rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white"
                         onClick={handleQuiz}
                       >
                         Quiz ❓
@@ -229,13 +223,14 @@ export const FactCard = ({
             >
               <div className="h-full flex flex-col">
                 <div className="flex justify-between items-start mb-4">
-                  <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors] || 'bg-gray-500')}>
+                  <Badge className={cn("text-white", topicColor)}>
                     {fact.topic}
                   </Badge>
                   <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant="ghost"
+                      className="rounded-full"
                       onClick={handleBookmark}
                     >
                       {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
@@ -243,6 +238,7 @@ export const FactCard = ({
                     <Button
                       size="sm"
                       variant="ghost"
+                      className="rounded-full"
                       onClick={handleShare}
                     >
                       <Share2 className="w-4 h-4" />
@@ -321,7 +317,7 @@ export const FactCard = ({
             <Button
               size="sm"
               variant="ghost"
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 rounded-full"
               onClick={handleBookmark}
             >
               {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
@@ -329,7 +325,7 @@ export const FactCard = ({
             <Button
               size="sm"
               variant="ghost"
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 rounded-full"
               onClick={handleShare}
             >
               <Share2 className="w-4 h-4" />
@@ -338,8 +334,8 @@ export const FactCard = ({
 
           <div className="absolute bottom-16 left-6 right-6">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">{topicEmojis[fact.topic as keyof typeof topicEmojis] || '🎲'}</span>
-              <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors] || 'bg-gray-500')}>
+              <span className="text-2xl">{topicEmoji}</span>
+              <Badge className={cn("text-white", topicColor)}>
                 {fact.topic}
               </Badge>
             </div>
@@ -353,7 +349,7 @@ export const FactCard = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-transparent border-white text-white hover:bg-white hover:text-black"
+                className="bg-transparent border-white text-white hover:bg-white hover:text-black rounded-xl"
                 onClick={(e) => {
                   e.stopPropagation();
                   setFlipped(true);
@@ -364,7 +360,7 @@ export const FactCard = ({
               {fact.quiz && (
                 <Button
                   size="sm"
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
                   onClick={handleQuiz}
                 >
                   Quiz ❓
@@ -387,13 +383,14 @@ export const FactCard = ({
       >
         <div className="h-full flex flex-col">
           <div className="flex justify-between items-start mb-4">
-            <Badge className={cn("text-white", topicColors[fact.topic as keyof typeof topicColors] || 'bg-gray-500')}>
+            <Badge className={cn("text-white", topicColor)}>
               {fact.topic}
             </Badge>
             <div className="flex gap-2">
               <Button
                 size="sm"
                 variant="ghost"
+                className="rounded-full"
                 onClick={handleBookmark}
               >
                 {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
@@ -401,6 +398,7 @@ export const FactCard = ({
               <Button
                 size="sm"
                 variant="ghost"
+                className="rounded-full"
                 onClick={handleShare}
               >
                 <Share2 className="w-4 h-4" />

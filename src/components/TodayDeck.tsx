@@ -11,10 +11,19 @@ import { useToast } from '@/hooks/use-toast';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { useGameification } from '@/hooks/useGameification';
 import { useFactProgress } from '@/hooks/useFactProgress';
+import { generateContextualImage } from '@/services/runware';
+import { ShareModal } from './ShareModal';
+
+// Temporary API Key input (in production, use environment variables or Supabase secrets)
+const TEMPORARY_API_KEY = '';
 
 export const TodayDeck = () => {
   const [todaysFacts, setTodaysFacts] = useState<Fact[]>([]);
   const [selectedQuizFact, setSelectedQuizFact] = useState<Fact | null>(null);
+  const [shareModalFact, setShareModalFact] = useState<Fact | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [apiKey, setApiKey] = useState<string>(TEMPORARY_API_KEY);
+  
   const { toast } = useToast();
   const { bookmarks, addBookmark, removeBookmark, isBookmarked } = useBookmarks();
   const { userProfile, completeQuiz, isFactCompleted, viewFact } = useGameification();
@@ -24,10 +33,28 @@ export const TodayDeck = () => {
     generateTodaysFacts();
   }, []);
 
-  const generateTodaysFacts = () => {
+  const generateTodaysFacts = async () => {
+    setIsRefreshing(true);
+    
     // Get facts using smart selection based on user progress and preferences
     const selectedFacts = getFactsToShow(facts, userProfile.preferredTopics);
-    setTodaysFacts(selectedFacts);
+    
+    // Potentially generate contextual images if API key is available
+    if (apiKey) {
+      const factsWithGeneratedImages = await Promise.all(selectedFacts.map(async (fact) => {
+        try {
+          const imageUrl = await generateContextualImage(fact.title, fact.topic, apiKey);
+          return imageUrl ? { ...fact, image: imageUrl } : fact;
+        } catch (error) {
+          console.error('Error generating image:', error);
+          return fact;
+        }
+      }));
+      
+      setTodaysFacts(factsWithGeneratedImages);
+    } else {
+      setTodaysFacts(selectedFacts);
+    }
     
     // Mark facts as viewed
     selectedFacts.forEach(fact => viewFact(fact.id));
@@ -36,6 +63,8 @@ export const TodayDeck = () => {
       title: "Fresh facts loaded!",
       description: "Discover fascinating new facts today.",
     });
+    
+    setIsRefreshing(false);
   };
 
   const handleBookmarkToggle = (fact: Fact) => {
@@ -55,23 +84,7 @@ export const TodayDeck = () => {
   };
 
   const handleShare = async (fact: Fact) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: fact.title,
-          text: fact.blurb,
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.log('Share cancelled');
-      }
-    } else {
-      await navigator.clipboard.writeText(`${fact.title}\n\n${fact.blurb}\n\nDiscover more at ${window.location.href}`);
-      toast({
-        title: "Copied to clipboard!",
-        description: "Share this fascinating fact with others",
-      });
-    }
+    setShareModalFact(fact);
   };
 
   const handleQuiz = (fact: Fact) => {
@@ -117,18 +130,38 @@ export const TodayDeck = () => {
         <Button 
           onClick={generateTodaysFacts}
           variant="outline"
-          className="gap-2"
+          className="gap-2 rounded-xl"
+          disabled={isRefreshing}
         >
-          <RefreshCw className="w-4 h-4" />
-          New Facts
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'New Facts'}
         </Button>
       </div>
+
+      {/* API Key Input (temporary) */}
+      {!TEMPORARY_API_KEY && (
+        <div className="max-w-md mx-auto p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+          <p className="text-sm text-blue-600 dark:text-blue-300 mb-2">
+            For AI-generated contextual images, enter your Runware API key:
+          </p>
+          <input
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            className="w-full p-2 border rounded-lg bg-white dark:bg-neutral-800 text-sm mb-2"
+            placeholder="Enter Runware API Key"
+          />
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            You can get a key at <a href="https://runware.ai" target="_blank" rel="noreferrer" className="underline">runware.ai</a>
+          </p>
+        </div>
+      )}
 
       {/* Facts Carousel */}
       <div className="relative max-w-2xl mx-auto">
         <Carousel className="w-full">
           <CarouselContent>
-            {todaysFacts.map((fact, index) => (
+            {todaysFacts.map((fact) => (
               <CarouselItem key={fact.id}>
                 <div className="flex justify-center px-4">
                   <FactCard
@@ -143,14 +176,14 @@ export const TodayDeck = () => {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
+          <CarouselPrevious className="rounded-full" />
+          <CarouselNext className="rounded-full" />
         </Carousel>
       </div>
 
       {/* Progress Indicator */}
       <div className="flex justify-center gap-2">
-        {todaysFacts.map((fact, index) => (
+        {todaysFacts.map((fact) => (
           <div
             key={fact.id}
             className={`w-2 h-2 rounded-full transition-colors ${
@@ -161,6 +194,13 @@ export const TodayDeck = () => {
           />
         ))}
       </div>
+
+      {/* Share Modal */}
+      <ShareModal 
+        isOpen={!!shareModalFact} 
+        onClose={() => setShareModalFact(null)}
+        fact={shareModalFact}
+      />
 
       {/* Quiz Modal */}
       <QuizModal

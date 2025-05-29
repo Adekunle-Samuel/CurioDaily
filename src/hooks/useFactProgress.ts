@@ -4,27 +4,46 @@ import { UserFactProgress } from '@/data/facts';
 
 export const useFactProgress = () => {
   const [factProgress, setFactProgress] = useState<UserFactProgress[]>([]);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('curio-fact-progress');
     if (stored) {
-      const parsed = JSON.parse(stored);
-      // Convert date strings back to Date objects
-      const progressWithDates = parsed.map((progress: any) => ({
-        ...progress,
-        lastViewed: new Date(progress.lastViewed),
-        firstViewed: new Date(progress.firstViewed)
-      }));
-      setFactProgress(progressWithDates);
+      try {
+        const parsed = JSON.parse(stored);
+        // Convert date strings back to Date objects
+        const progressWithDates = parsed.map((progress: any) => ({
+          ...progress,
+          lastViewed: new Date(progress.lastViewed),
+          firstViewed: new Date(progress.firstViewed)
+        }));
+        setFactProgress(progressWithDates);
+      } catch (error) {
+        console.error('Error parsing fact progress:', error);
+        // Initialize with empty array if parsing fails
+        setFactProgress([]);
+      }
     }
+    setInitialized(true);
   }, []);
+
+  // Save progress whenever it changes
+  useEffect(() => {
+    if (initialized && factProgress.length > 0) {
+      localStorage.setItem('curio-fact-progress', JSON.stringify(factProgress));
+      console.log('Saved fact progress:', factProgress);
+    }
+  }, [factProgress, initialized]);
 
   const saveProgress = (progress: UserFactProgress[]) => {
     setFactProgress(progress);
+    // Explicitly save to localStorage for immediate persistence
     localStorage.setItem('curio-fact-progress', JSON.stringify(progress));
+    console.log('Explicitly saved fact progress:', progress);
   };
 
   const markFactAsViewed = (factId: number) => {
+    console.log('Marking fact as viewed:', factId);
     const now = new Date();
     const existingProgress = factProgress.find(p => p.factId === factId);
     
@@ -35,6 +54,7 @@ export const useFactProgress = () => {
           : p
       );
       saveProgress(updatedProgress);
+      console.log('Updated existing fact progress');
     } else {
       const newProgress: UserFactProgress = {
         factId,
@@ -46,10 +66,12 @@ export const useFactProgress = () => {
         firstViewed: now
       };
       saveProgress([...factProgress, newProgress]);
+      console.log('Created new fact progress entry');
     }
   };
 
   const markQuizAttempt = (factId: number, isCorrect: boolean) => {
+    console.log('Marking quiz attempt:', factId, 'correct:', isCorrect);
     const now = new Date();
     const existingProgress = factProgress.find(p => p.factId === factId);
     
@@ -74,6 +96,7 @@ export const useFactProgress = () => {
           : p
       );
       saveProgress(updatedProgress);
+      console.log('Updated quiz progress');
     } else {
       const newProgress: UserFactProgress = {
         factId,
@@ -85,6 +108,7 @@ export const useFactProgress = () => {
         firstViewed: now
       };
       saveProgress([...factProgress, newProgress]);
+      console.log('Created new progress with quiz attempt');
     }
   };
 
@@ -95,6 +119,9 @@ export const useFactProgress = () => {
   const getFactsToShow = (allFacts: any[], preferredTopics: string[] = []) => {
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    console.log('Getting facts to show, preferred topics:', preferredTopics);
+    console.log('Current progress state:', factProgress);
     
     // Get facts that haven't been viewed or haven't been shown recently
     const availableFacts = allFacts.filter(fact => {
@@ -111,34 +138,38 @@ export const useFactProgress = () => {
       return true;
     });
     
+    // Always use a random selection for better variety
+    const shuffledFacts = [...availableFacts].sort(() => 0.5 - Math.random());
+    
     // Prioritize facts from preferred topics
     if (preferredTopics.length > 0) {
-      const preferredFacts = availableFacts.filter(fact => 
+      const preferredFacts = shuffledFacts.filter(fact => 
         preferredTopics.includes(fact.topic)
       );
-      const otherFacts = availableFacts.filter(fact => 
+      const otherFacts = shuffledFacts.filter(fact => 
         !preferredTopics.includes(fact.topic)
       );
       
       // Mix preferred and other facts (70% preferred, 30% other)
-      const shuffledPreferred = [...preferredFacts].sort(() => 0.5 - Math.random());
-      const shuffledOther = [...otherFacts].sort(() => 0.5 - Math.random());
-      
       const result = [];
       for (let i = 0; i < 3; i++) {
-        if (i < 2 && shuffledPreferred.length > 0) {
-          result.push(shuffledPreferred.pop()!);
-        } else if (shuffledOther.length > 0) {
-          result.push(shuffledOther.pop()!);
-        } else if (shuffledPreferred.length > 0) {
-          result.push(shuffledPreferred.pop()!);
+        if (i < 2 && preferredFacts.length > 0) {
+          result.push(preferredFacts.shift()!);
+        } else if (otherFacts.length > 0) {
+          result.push(otherFacts.shift()!);
+        } else if (preferredFacts.length > 0) {
+          result.push(preferredFacts.shift()!);
         }
       }
+      
+      console.log('Selected facts:', result);
       return result;
     }
     
     // If no preferred topics, return random facts
-    return [...availableFacts].sort(() => 0.5 - Math.random()).slice(0, 3);
+    const result = shuffledFacts.slice(0, 3);
+    console.log('Selected random facts:', result);
+    return result;
   };
 
   const getViewedFacts = () => {

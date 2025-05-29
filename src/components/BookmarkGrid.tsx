@@ -1,8 +1,10 @@
 
+import { useState } from 'react';
 import { Share2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Fact } from '@/data/facts';
+import { ShareModal } from './ShareModal';
 import { cn } from '@/lib/utils';
 
 interface BookmarkGridProps {
@@ -12,12 +14,25 @@ interface BookmarkGridProps {
 }
 
 export const BookmarkGrid = ({ bookmarks, onRemoveBookmark, onShare }: BookmarkGridProps) => {
+  const [shareModalFact, setShareModalFact] = useState<Fact | null>(null);
+  
   const topicColors = {
     science: 'bg-blue-500',
     history: 'bg-amber-500',
     arts: 'bg-purple-500',
     space: 'bg-indigo-500',
-    random: 'bg-pink-500'
+    random: 'bg-pink-500',
+    sports: 'bg-emerald-500',
+    politics: 'bg-red-500',
+    music: 'bg-pink-500',
+    technology: 'bg-cyan-500',
+    geography: 'bg-green-500',
+    nature: 'bg-teal-500',
+    psychology: 'bg-violet-500'
+  };
+
+  const handleShare = (fact: Fact) => {
+    setShareModalFact(fact);
   };
 
   if (bookmarks.length === 0) {
@@ -39,56 +54,67 @@ export const BookmarkGrid = ({ bookmarks, onRemoveBookmark, onShare }: BookmarkG
   }
 
   return (
-    <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-      {bookmarks.map(fact => (
-        <div 
-          key={fact.id}
-          className="break-inside-avoid bg-white dark:bg-neutral-800 rounded-xl shadow-card overflow-hidden"
-        >
-          <div className="relative">
-            <img 
-              src={fact.image} 
-              alt={fact.title}
-              className="w-full h-48 object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            
-            <div className="absolute top-3 left-3">
-              <Badge className={cn("text-white text-xs", topicColors[fact.topic as keyof typeof topicColors])}>
-                {fact.topic}
-              </Badge>
+    <>
+      <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+        {bookmarks.map(fact => (
+          <div 
+            key={fact.id}
+            className="break-inside-avoid bg-white dark:bg-neutral-800 rounded-xl shadow-card overflow-hidden"
+          >
+            <div className="relative">
+              <img 
+                src={fact.image} 
+                alt={fact.title}
+                className="w-full h-48 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              
+              <div className="absolute top-3 left-3">
+                <Badge className={cn(
+                  "text-white text-xs", 
+                  topicColors[fact.topic as keyof typeof topicColors] || "bg-gray-500"
+                )}>
+                  {fact.topic}
+                </Badge>
+              </div>
+
+              <div className="absolute top-3 right-3 flex gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white hover:bg-white/20 rounded-full h-8 w-8 p-0"
+                  onClick={() => handleShare(fact)}
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white hover:bg-red-500/20 rounded-full h-8 w-8 p-0"
+                  onClick={() => onRemoveBookmark(fact.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
-            <div className="absolute top-3 right-3 flex gap-1">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-white hover:bg-white/20 h-8 w-8 p-0"
-                onClick={() => onShare(fact)}
-              >
-                <Share2 className="w-4 h-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-white hover:bg-red-500/20 h-8 w-8 p-0"
-                onClick={() => onRemoveBookmark(fact.id)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+            <div className="p-4">
+              <h3 className="font-bold text-lg mb-2 text-neutral-900 dark:text-white leading-tight">
+                {fact.title}
+              </h3>
+              <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">
+                {fact.blurb}
+              </p>
             </div>
           </div>
-
-          <div className="p-4">
-            <h3 className="font-bold text-lg mb-2 text-neutral-900 dark:text-white leading-tight">
-              {fact.title}
-            </h3>
-            <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">
-              {fact.blurb}
-            </p>
-          </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+      
+      <ShareModal 
+        isOpen={!!shareModalFact} 
+        onClose={() => setShareModalFact(null)}
+        fact={shareModalFact}
+      />
+    </>
   );
 };
