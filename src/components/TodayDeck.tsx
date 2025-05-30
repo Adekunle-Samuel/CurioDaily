@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Loader2 } from 'lucide-react';
 import { FactCard } from './FactCard';
 import { QuizModal } from './QuizModal';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Fact } from '@/data/facts';
-import facts from '@/data/facts';
 import { useToast } from '@/hooks/use-toast';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { useGameification } from '@/hooks/useGameification';
 import { useFactProgress } from '@/hooks/useFactProgress';
 import { generateContextualImage } from '@/services/runware';
 import { ShareModal } from './ShareModal';
+import { factProvider } from '@/services/factProvider';
 
 // Hardcoded API Key for automatic functionality
 const RUNWARE_API_KEY = 'MH9tvl5oBifxOJ2GwK0HRTCGkNydwWNK';
@@ -22,6 +22,7 @@ export const TodayDeck = () => {
   const [shareModalFact, setShareModalFact] = useState<Fact | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [initializationStatus, setInitializationStatus] = useState('');
   
   const { toast } = useToast();
   const { bookmarks, addBookmark, removeBookmark, isBookmarked } = useBookmarks();
@@ -29,16 +30,22 @@ export const TodayDeck = () => {
   const { getFactsToShow, factProgress } = useFactProgress();
 
   useEffect(() => {
-    generateTodaysFacts();
+    initializeAndLoadFacts();
   }, []);
 
-  const generateTodaysFacts = async () => {
+  const initializeAndLoadFacts = async () => {
     setIsRefreshing(true);
     setIsGenerating(true);
+    setInitializationStatus('Initializing fact database...');
     
     try {
+      // Get all facts to trigger initialization
+      setInitializationStatus('Generating diverse facts across all topics...');
+      const allFacts = await factProvider.getAllFacts();
+      
+      setInitializationStatus('Selecting personalized facts...');
       // Get facts using smart selection with dynamic generation
-      const selectedFacts = await getFactsToShow(facts, factProgress, userProfile.preferredTopics);
+      const selectedFacts = await getFactsToShow(allFacts, factProgress, userProfile.preferredTopics);
       
       if (selectedFacts.length === 0) {
         toast({
@@ -47,9 +54,11 @@ export const TodayDeck = () => {
         });
         setIsRefreshing(false);
         setIsGenerating(false);
+        setInitializationStatus('');
         return;
       }
       
+      setInitializationStatus('Generating contextual images...');
       // Generate contextual images with better error handling
       const factsWithGeneratedImages = await Promise.all(selectedFacts.map(async (fact) => {
         try {
@@ -67,9 +76,80 @@ export const TodayDeck = () => {
       selectedFacts.forEach(fact => viewFact(fact.id));
       
       const generatedCount = selectedFacts.filter(f => f.isGenerated).length;
+      const topicDistribution = selectedFacts.reduce((acc, fact) => {
+        acc[fact.topic] = (acc[fact.topic] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
       const message = generatedCount > 0 
-        ? `Fresh facts loaded! ${generatedCount} newly generated facts included.`
-        : "Fresh facts loaded! Discover fascinating new facts today.";
+        ? `Fresh facts loaded! ${generatedCount} newly generated facts across topics: ${Object.keys(topicDistribution).join(', ')}`
+        : `Facts loaded across topics: ${Object.keys(topicDistribution).join(', ')}`;
+      
+      toast({
+        title: "Facts ready!",
+        description: message,
+      });
+
+      // Log fact counts for debugging
+      const factCounts = factProvider.getFactCountByTopic();
+      console.log('Fact counts by topic:', factCounts);
+      
+    } catch (error) {
+      console.error('Error generating today\'s facts:', error);
+      toast({
+        title: "Error loading facts",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshing(false);
+      setIsGenerating(false);
+      setInitializationStatus('');
+    }
+  };
+
+  const generateTodaysFacts = async () => {
+    setIsRefreshing(true);
+    setIsGenerating(true);
+    
+    try {
+      // Get fresh facts
+      const allFacts = await factProvider.getAllFacts();
+      const selectedFacts = await getFactsToShow(allFacts, factProgress, userProfile.preferredTopics);
+      
+      if (selectedFacts.length === 0) {
+        toast({
+          title: "Generating new facts",
+          description: "Creating fresh content for you...",
+        });
+        return;
+      }
+      
+      // Generate contextual images
+      const factsWithGeneratedImages = await Promise.all(selectedFacts.map(async (fact) => {
+        try {
+          const imageUrl = await generateContextualImage(fact.title, fact.topic, RUNWARE_API_KEY);
+          return imageUrl ? { ...fact, image: imageUrl } : fact;
+        } catch (error) {
+          console.error('Error generating image for fact:', fact.id, error);
+          return fact;
+        }
+      }));
+      
+      setTodaysFacts(factsWithGeneratedImages);
+      
+      // Mark facts as viewed
+      selectedFacts.forEach(fact => viewFact(fact.id));
+      
+      const generatedCount = selectedFacts.filter(f => f.isGenerated).length;
+      const topicDistribution = selectedFacts.reduce((acc, fact) => {
+        acc[fact.topic] = (acc[fact.topic] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      const message = generatedCount > 0 
+        ? `Fresh facts loaded! ${generatedCount} newly generated facts across topics: ${Object.keys(topicDistribution).join(', ')}`
+        : `Facts loaded across topics: ${Object.keys(topicDistribution).join(', ')}`;
       
       toast({
         title: "Facts ready!",
@@ -130,12 +210,21 @@ export const TodayDeck = () => {
   if (todaysFacts.length === 0) {
     return (
       <div className="text-center py-16">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center animate-pulse">
-          <span className="text-2xl">{isGenerating ? "🎯" : "🤔"}</span>
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+          {isGenerating ? (
+            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          ) : (
+            <span className="text-2xl">🤔</span>
+          )}
         </div>
-        <p className="text-neutral-600 dark:text-neutral-400">
-          {isGenerating ? "Generating fresh facts for you..." : "Loading today's facts..."}
+        <p className="text-neutral-600 dark:text-neutral-400 mb-2">
+          {isGenerating ? initializationStatus || "Generating fresh facts for you..." : "Loading today's facts..."}
         </p>
+        {isGenerating && (
+          <p className="text-sm text-neutral-500 dark:text-neutral-500">
+            This may take a moment as we create diverse content across all topics...
+          </p>
+        )}
       </div>
     );
   }

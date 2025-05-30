@@ -28,15 +28,15 @@ export class DeepseekService {
           messages: [
             {
               role: 'system',
-              content: 'You are a fact generator that creates interesting, educational, and accurate facts with quizzes. Always respond with valid JSON only, no additional text.'
+              content: 'You are a fact generator that creates interesting, educational, and accurate facts with quizzes. Always respond with valid JSON only, no additional text. Focus on lesser-known but verifiable facts that would surprise and educate people.'
             },
             {
               role: 'user',
               content: prompt
             }
           ],
-          temperature: 0.7,
-          max_tokens: 1000,
+          temperature: 0.8,
+          max_tokens: 2000,
         }),
       });
 
@@ -53,16 +53,23 @@ export class DeepseekService {
   }
 
   async generateFacts(topics: string[], count: number = 3): Promise<GeneratedFact[]> {
-    const topicList = topics.length > 0 ? topics.join(', ') : 'science, history, nature, technology, space, animals';
+    const topicList = topics.length > 0 ? topics.join(', ') : 'science, history, nature, technology, space, animals, culture, geography, psychology, health';
     
-    const prompt = `Generate ${count} fascinating and educational facts. Each fact should be unique, interesting, and accurate. Choose topics from: ${topicList}
+    const prompt = `Generate ${count} fascinating and educational facts. Each fact should be unique, surprising, and accurate. Choose diverse topics from: ${topicList}
+
+Requirements:
+- Facts should be lesser-known but verifiable
+- Each fact should be educational and surprising
+- Include diverse topics to ensure variety
+- Make facts engaging and memorable
+- Include accurate quiz questions
 
 Format as JSON array with this exact structure:
 [
   {
     "title": "Engaging fact title (max 80 characters)",
-    "blurb": "Detailed explanation of the fact (100-200 words, educational and engaging)",
-    "topic": "One of: science, history, nature, technology, space, animals, culture, geography, psychology, health",
+    "blurb": "Detailed explanation of the fact (150-250 words, educational and engaging)",
+    "topic": "One of: science, history, nature, technology, space, animals, culture, geography, psychology, health, sports, art, music, literature, mathematics, physics, chemistry, biology, archaeology, astronomy, philosophy, economics, politics, sociology, anthropology, linguistics, medicine",
     "quiz": {
       "question": "Multiple choice question about the fact",
       "options": ["Option A", "Option B", "Option C", "Option D"],
@@ -74,8 +81,8 @@ Format as JSON array with this exact structure:
 
 Ensure facts are:
 - Scientifically accurate and verifiable
-- Interesting and surprising
-- Educational value
+- Surprising and lesser-known
+- Educational with high learning value
 - Diverse across different topics
 - Include engaging quizzes that test understanding`;
 
@@ -86,7 +93,7 @@ Ensure facts are:
       // Validate and clean the response
       return facts.map((fact: any, index: number) => ({
         ...fact,
-        id: Date.now() + index, // Add unique ID
+        id: Date.now() + index,
         quiz: fact.quiz || undefined
       }));
     } catch (error) {
@@ -95,14 +102,21 @@ Ensure facts are:
     }
   }
 
-  async generateFactsByTopic(topic: string, count: number = 3): Promise<GeneratedFact[]> {
-    const prompt = `Generate ${count} fascinating facts specifically about ${topic}.
+  async generateFactsByTopic(topic: string, count: number = 5): Promise<GeneratedFact[]> {
+    const prompt = `Generate ${count} fascinating and lesser-known facts specifically about ${topic}.
+
+Requirements for ${topic} facts:
+- Focus on surprising, lesser-known aspects of ${topic}
+- Ensure facts are verifiable and educational
+- Make each fact unique and memorable
+- Include accurate and engaging quiz questions
+- Vary the difficulty and scope within the topic
 
 Format as JSON array with this exact structure:
 [
   {
     "title": "Engaging fact title about ${topic} (max 80 characters)",
-    "blurb": "Detailed explanation (100-200 words, educational and engaging)",
+    "blurb": "Detailed explanation (150-250 words, educational and engaging)",
     "topic": "${topic}",
     "quiz": {
       "question": "Multiple choice question about the fact",
@@ -116,8 +130,9 @@ Format as JSON array with this exact structure:
 Focus on:
 - Lesser-known but verified facts about ${topic}
 - Educational and surprising information
-- Engaging presentation
-- Accurate quiz questions`;
+- Engaging presentation style
+- Accurate quiz questions that test comprehension
+- Various aspects and subtopics within ${topic}`;
 
     try {
       const response = await this.makeRequest(prompt);

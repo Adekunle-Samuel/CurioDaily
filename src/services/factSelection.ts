@@ -1,3 +1,4 @@
+
 import { UserFactProgress } from '@/types/factProgress';
 import { factProvider, ExtendedFact } from './factProvider';
 
@@ -9,32 +10,36 @@ export const factSelectionService = {
   ): Promise<ExtendedFact[]> => {
     console.log('Getting facts to show with dynamic generation');
     console.log('Preferred topics:', preferredTopics);
-    console.log('Current progress state:', factProgress);
+    console.log('Current progress state:', factProgress.length, 'facts viewed');
     
     // Get IDs of facts that have been interacted with
     const viewedFactIds = factProgress.map(p => p.factId);
     
-    // Filter out facts that have been interacted with
-    const availableStaticFacts = allFacts.filter(fact => {
-      return !viewedFactIds.includes(fact.id);
-    });
+    // Get fresh facts from the provider (which includes both static and generated)
+    const availableFacts = await factProvider.getFactsByTopics(preferredTopics, viewedFactIds);
     
-    console.log('Available static facts after filtering:', availableStaticFacts.length);
+    console.log('Available facts after filtering:', availableFacts.length);
+    console.log('Topic distribution:', factSelectionService.getTopicDistribution(availableFacts));
     
-    // If we have enough facts, use them
-    if (availableStaticFacts.length >= 3) {
-      return factSelectionService.selectFactsWithVariety(availableStaticFacts, preferredTopics, 3);
+    // If we don't have enough facts, generate more
+    if (availableFacts.length < 10) {
+      console.log('Generating more facts due to low availability');
+      const topicsToGenerate = preferredTopics.length > 0 ? preferredTopics : factProvider.getAvailableTopics().slice(0, 5);
+      
+      try {
+        await Promise.all(topicsToGenerate.map(topic => 
+          factProvider.generateMoreFactsForTopic(topic, 10)
+        ));
+        
+        // Get updated facts
+        const updatedFacts = await factProvider.getFactsByTopics(preferredTopics, viewedFactIds);
+        return factSelectionService.selectFactsWithVariety(updatedFacts, preferredTopics, 3);
+      } catch (error) {
+        console.error('Failed to generate additional facts:', error);
+      }
     }
     
-    // If we need more facts, get them from the fact provider (which may generate new ones)
-    try {
-      const facts = await factProvider.getFactsByTopics(preferredTopics, viewedFactIds);
-      console.log('Got facts from provider:', facts.length);
-      return factSelectionService.selectFactsWithVariety(facts, preferredTopics, 3);
-    } catch (error) {
-      console.error('Failed to get facts from provider:', error);
-      return [];
-    }
+    return factSelectionService.selectFactsWithVariety(availableFacts, preferredTopics, 3);
   },
 
   selectFactsWithVariety: (
@@ -43,6 +48,8 @@ export const factSelectionService = {
     targetCount: number
   ): ExtendedFact[] => {
     if (availableFacts.length === 0) return [];
+
+    console.log(`Selecting ${targetCount} facts from ${availableFacts.length} available facts`);
 
     // Categorize facts by topic
     const factsByTopic = availableFacts.reduce((acc, fact) => {
@@ -55,21 +62,24 @@ export const factSelectionService = {
 
     const selectedFacts: ExtendedFact[] = [];
 
-    // Strategy 1: Prioritize preferred topics
+    // Strategy 1: Prioritize preferred topics (if any)
     if (preferredTopics.length > 0) {
+      console.log('Prioritizing preferred topics:', preferredTopics);
       const preferredFactsSelected = [];
+      
       for (const topic of preferredTopics) {
         const topicFacts = factsByTopic[topic];
-        if (topicFacts && topicFacts.length > 0 && preferredFactsSelected.length < 2) {
+        if (topicFacts && topicFacts.length > 0 && preferredFactsSelected.length < Math.min(2, targetCount)) {
           const shuffledTopicFacts = [...topicFacts].sort(() => 0.5 - Math.random());
           preferredFactsSelected.push(shuffledTopicFacts[0]);
           factsByTopic[topic] = topicFacts.filter(f => f.id !== shuffledTopicFacts[0].id);
         }
       }
       selectedFacts.push(...preferredFactsSelected);
+      console.log(`Selected ${preferredFactsSelected.length} facts from preferred topics`);
     }
 
-    // Strategy 2: Fill remaining slots with variety
+    // Strategy 2: Fill remaining slots with topic variety
     const remainingSlots = targetCount - selectedFacts.length;
     if (remainingSlots > 0) {
       const availableTopics = Object.keys(factsByTopic).filter(topic => {
@@ -77,6 +87,7 @@ export const factSelectionService = {
         return topicFacts && topicFacts.length > 0;
       });
       
+      console.log('Available topics for variety selection:', availableTopics);
       const shuffledTopics = [...availableTopics].sort(() => 0.5 - Math.random());
       
       for (let i = 0; i < remainingSlots && shuffledTopics.length > 0; i++) {
@@ -98,7 +109,7 @@ export const factSelectionService = {
       }
     }
 
-    // Strategy 3: Fill any remaining slots randomly
+    // Strategy 3: Fill any remaining slots randomly if still needed
     if (selectedFacts.length < targetCount) {
       const remainingFacts = Object.values(factsByTopic).flat();
       const shuffledRemaining = [...remainingFacts].sort(() => 0.5 - Math.random());
@@ -107,8 +118,16 @@ export const factSelectionService = {
     }
 
     const finalSelection = [...selectedFacts].sort(() => 0.5 - Math.random());
-    console.log('Final selection:', finalSelection.map(f => `${f.topic}: ${f.title} ${f.isGenerated ? '(Generated)' : '(Static)'}`));
+    console.log('Final selection topics:', finalSelection.map(f => f.topic));
+    console.log('Final selection details:', finalSelection.map(f => `${f.topic}: ${f.title} ${f.isGenerated ? '(Generated)' : '(Static)'}`));
     
     return finalSelection.slice(0, targetCount);
+  },
+
+  getTopicDistribution: (facts: ExtendedFact[]): Record<string, number> => {
+    return facts.reduce((acc, fact) => {
+      acc[fact.topic] = (acc[fact.topic] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
   }
 };
