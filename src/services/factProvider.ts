@@ -52,9 +52,28 @@ class FactProvider {
       console.log(`Generating ${count} new facts for topics:`, topics);
       const generatedFacts = await deepseekService.generateFacts(topics, count);
       
-      // Convert to ExtendedFact format
-      const extendedFacts: ExtendedFact[] = generatedFacts.map(fact => ({
-        ...fact,
+      // Convert to ExtendedFact format with all required properties
+      const extendedFacts: ExtendedFact[] = generatedFacts.map((fact, index) => ({
+        id: Date.now() + index + Math.random(), // Ensure unique ID
+        title: fact.title,
+        blurb: fact.blurb,
+        body: fact.blurb, // Use blurb as body for generated facts
+        topic: fact.topic,
+        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80", // Default placeholder
+        sources: [
+          {
+            title: "AI Generated Fact",
+            publication: "Deepseek AI",
+            type: "article" as const,
+            year: new Date().getFullYear()
+          }
+        ],
+        xpValue: 15,
+        difficulty: 'medium' as const,
+        tags: [fact.topic],
+        dateAdded: new Date().toISOString().split('T')[0],
+        verificationLevel: 'verified' as const,
+        quiz: fact.quiz,
         isGenerated: true
       }));
 
@@ -73,8 +92,27 @@ class FactProvider {
   async generateMoreFactsForTopic(topic: string, count: number = 5): Promise<ExtendedFact[]> {
     try {
       const generatedFacts = await deepseekService.generateFactsByTopic(topic, count);
-      return generatedFacts.map(fact => ({
-        ...fact,
+      return generatedFacts.map((fact, index) => ({
+        id: Date.now() + index + Math.random(),
+        title: fact.title,
+        blurb: fact.blurb,
+        body: fact.blurb,
+        topic: fact.topic,
+        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+        sources: [
+          {
+            title: "AI Generated Fact",
+            publication: "Deepseek AI",
+            type: "article" as const,
+            year: new Date().getFullYear()
+          }
+        ],
+        xpValue: 15,
+        difficulty: 'medium' as const,
+        tags: [fact.topic],
+        dateAdded: new Date().toISOString().split('T')[0],
+        verificationLevel: 'verified' as const,
+        quiz: fact.quiz,
         isGenerated: true
       }));
     } catch (error) {

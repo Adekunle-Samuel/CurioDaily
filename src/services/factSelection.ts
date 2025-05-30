@@ -60,10 +60,11 @@ export const factSelectionService = {
     if (preferredTopics.length > 0) {
       const preferredFactsSelected = [];
       for (const topic of preferredTopics) {
-        if (factsByTopic[topic] && factsByTopic[topic].length > 0 && preferredFactsSelected.length < 2) {
-          const shuffledTopicFacts = [...factsByTopic[topic]].sort(() => 0.5 - Math.random());
+        const topicFacts = factsByTopic[topic];
+        if (topicFacts && topicFacts.length > 0 && preferredFactsSelected.length < 2) {
+          const shuffledTopicFacts = [...topicFacts].sort(() => 0.5 - Math.random());
           preferredFactsSelected.push(shuffledTopicFacts[0]);
-          factsByTopic[topic] = factsByTopic[topic].filter(f => f.id !== shuffledTopicFacts[0].id);
+          factsByTopic[topic] = topicFacts.filter(f => f.id !== shuffledTopicFacts[0].id);
         }
       }
       selectedFacts.push(...preferredFactsSelected);
@@ -72,24 +73,26 @@ export const factSelectionService = {
     // Strategy 2: Fill remaining slots with variety
     const remainingSlots = targetCount - selectedFacts.length;
     if (remainingSlots > 0) {
-      const availableTopics = Object.keys(factsByTopic).filter(topic => 
-        factsByTopic[topic].length > 0
-      );
+      const availableTopics = Object.keys(factsByTopic).filter(topic => {
+        const topicFacts = factsByTopic[topic];
+        return topicFacts && topicFacts.length > 0;
+      });
       
       const shuffledTopics = [...availableTopics].sort(() => 0.5 - Math.random());
       
       for (let i = 0; i < remainingSlots && shuffledTopics.length > 0; i++) {
         const topicIndex = i % shuffledTopics.length;
         const topic = shuffledTopics[topicIndex];
+        const topicFacts = factsByTopic[topic];
         
-        if (factsByTopic[topic] && factsByTopic[topic].length > 0) {
-          const randomIndex = Math.floor(Math.random() * factsByTopic[topic].length);
-          const selectedFact = factsByTopic[topic][randomIndex];
+        if (topicFacts && topicFacts.length > 0) {
+          const randomIndex = Math.floor(Math.random() * topicFacts.length);
+          const selectedFact = topicFacts[randomIndex];
           selectedFacts.push(selectedFact);
           
-          factsByTopic[topic].splice(randomIndex, 1);
+          topicFacts.splice(randomIndex, 1);
           
-          if (factsByTopic[topic].length === 0) {
+          if (topicFacts.length === 0) {
             shuffledTopics.splice(topicIndex, 1);
           }
         }
