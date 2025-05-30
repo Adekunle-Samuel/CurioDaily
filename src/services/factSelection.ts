@@ -1,4 +1,3 @@
-
 import { UserFactProgress } from '@/types/factProgress';
 import { factProvider, ExtendedFact } from './factProvider';
 
@@ -24,14 +23,14 @@ export const factSelectionService = {
     
     // If we have enough facts, use them
     if (availableStaticFacts.length >= 3) {
-      return this.selectFactsWithVariety(availableStaticFacts, preferredTopics, 3);
+      return factSelectionService.selectFactsWithVariety(availableStaticFacts, preferredTopics, 3);
     }
     
     // If we need more facts, get them from the fact provider (which may generate new ones)
     try {
       const facts = await factProvider.getFactsByTopics(preferredTopics, viewedFactIds);
       console.log('Got facts from provider:', facts.length);
-      return this.selectFactsWithVariety(facts, preferredTopics, 3);
+      return factSelectionService.selectFactsWithVariety(facts, preferredTopics, 3);
     } catch (error) {
       console.error('Failed to get facts from provider:', error);
       return [];
