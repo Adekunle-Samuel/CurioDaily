@@ -8,11 +8,11 @@ export const factSelectionService = {
     console.log('Total facts available:', allFacts.length);
     console.log('Current progress state:', factProgress);
     
-    // Filter out facts that have been interacted with
+    // Filter out facts that have been interacted with (viewed, quizzed, or mastered)
     const availableFacts = allFacts.filter(fact => {
       const progress = factProgress.find(p => p.factId === fact.id);
-      // Never show facts that have been viewed, quizzed, or mastered
-      return !progress || progress.status === undefined;
+      // Only show facts that have never been interacted with
+      return !progress;
     });
     
     console.log('Available facts after filtering:', availableFacts.length);

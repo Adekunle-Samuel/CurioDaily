@@ -134,8 +134,8 @@ export class RunwareService {
         taskType: "imageInference",
         taskUUID,
         model: params.model || "runware:100@1",
-        width: 1024,
-        height: 1024,
+        width: 832, // Fixed: must be multiple of 64
+        height: 640, // Fixed: must be multiple of 64
         numberResults: params.numberResults || 1,
         outputFormat: params.outputFormat || "WEBP",
         steps: 4,
@@ -179,8 +179,8 @@ export const generateContextualImage = async (title: string, topic: string, apiK
     const result = await service.generateImage({
       positivePrompt: prompt,
       model: "runware:100@1",
-      width: 800,
-      height: 600,
+      width: 832, // Fixed: must be multiple of 64
+      height: 640, // Fixed: must be multiple of 64
       numberResults: 1,
       outputFormat: "WEBP"
     });

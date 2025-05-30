@@ -67,9 +67,11 @@ export const useFactProgress = () => {
       const newQuizAttempts = existingProgress.quizAttempts + 1;
       let newStatus = existingProgress.status;
       
-      // Mark as quizzed after first attempt, mastered only if answered correctly on first try
-      if (newQuizAttempts === 1) {
-        newStatus = isCorrect ? 'mastered' : 'quizzed';
+      // Only mark as mastered if correct on first quiz attempt
+      if (existingProgress.quizAttempts === 0 && isCorrect) {
+        newStatus = 'mastered';
+      } else if (existingProgress.quizAttempts === 0) {
+        newStatus = 'quizzed';
       }
       
       const updatedProgress = factProgress.map(p => 

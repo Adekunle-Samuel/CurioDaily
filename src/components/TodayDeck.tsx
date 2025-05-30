@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
@@ -35,31 +34,49 @@ export const TodayDeck = () => {
   const generateTodaysFacts = async () => {
     setIsRefreshing(true);
     
-    // Get facts using smart selection based on user progress and preferences
-    const selectedFacts = getFactsToShow(facts, userProfile.preferredTopics);
-    
-    // Generate contextual images automatically with API key
-    const factsWithGeneratedImages = await Promise.all(selectedFacts.map(async (fact) => {
-      try {
-        const imageUrl = await generateContextualImage(fact.title, fact.topic, RUNWARE_API_KEY);
-        return imageUrl ? { ...fact, image: imageUrl } : fact;
-      } catch (error) {
-        console.error('Error generating image:', error);
-        return fact;
+    try {
+      // Get facts using smart selection based on user progress and preferences
+      const selectedFacts = getFactsToShow(facts, userProfile.preferredTopics);
+      
+      if (selectedFacts.length === 0) {
+        toast({
+          title: "No more facts available",
+          description: "You've seen all available facts! More content coming soon.",
+        });
+        setIsRefreshing(false);
+        return;
       }
-    }));
-    
-    setTodaysFacts(factsWithGeneratedImages);
-    
-    // Mark facts as viewed
-    selectedFacts.forEach(fact => viewFact(fact.id));
-    
-    toast({
-      title: "Fresh facts loaded!",
-      description: "Discover fascinating new facts today.",
-    });
-    
-    setIsRefreshing(false);
+      
+      // Generate contextual images with better error handling
+      const factsWithGeneratedImages = await Promise.all(selectedFacts.map(async (fact) => {
+        try {
+          const imageUrl = await generateContextualImage(fact.title, fact.topic, RUNWARE_API_KEY);
+          return imageUrl ? { ...fact, image: imageUrl } : fact;
+        } catch (error) {
+          console.error('Error generating image for fact:', fact.id, error);
+          return fact; // Return fact without generated image
+        }
+      }));
+      
+      setTodaysFacts(factsWithGeneratedImages);
+      
+      // Mark facts as viewed
+      selectedFacts.forEach(fact => viewFact(fact.id));
+      
+      toast({
+        title: "Fresh facts loaded!",
+        description: "Discover fascinating new facts today.",
+      });
+    } catch (error) {
+      console.error('Error generating today\'s facts:', error);
+      toast({
+        title: "Error loading facts",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleBookmarkToggle = (fact: Fact) => {
