@@ -21,11 +21,12 @@ export const TodayDeck = () => {
   const [selectedQuizFact, setSelectedQuizFact] = useState<Fact | null>(null);
   const [shareModalFact, setShareModalFact] = useState<Fact | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   
   const { toast } = useToast();
   const { bookmarks, addBookmark, removeBookmark, isBookmarked } = useBookmarks();
   const { userProfile, completeQuiz, isFactCompleted, viewFact } = useGameification();
-  const { getFactsToShow } = useFactProgress();
+  const { getFactsToShow, factProgress } = useFactProgress();
 
   useEffect(() => {
     generateTodaysFacts();
@@ -33,17 +34,19 @@ export const TodayDeck = () => {
 
   const generateTodaysFacts = async () => {
     setIsRefreshing(true);
+    setIsGenerating(true);
     
     try {
-      // Get facts using smart selection based on user progress and preferences
-      const selectedFacts = getFactsToShow(facts, userProfile.preferredTopics);
+      // Get facts using smart selection with dynamic generation
+      const selectedFacts = await getFactsToShow(facts, factProgress, userProfile.preferredTopics);
       
       if (selectedFacts.length === 0) {
         toast({
-          title: "No more facts available",
-          description: "You've seen all available facts! More content coming soon.",
+          title: "Generating new facts",
+          description: "Creating fresh content for you...",
         });
         setIsRefreshing(false);
+        setIsGenerating(false);
         return;
       }
       
@@ -54,7 +57,7 @@ export const TodayDeck = () => {
           return imageUrl ? { ...fact, image: imageUrl } : fact;
         } catch (error) {
           console.error('Error generating image for fact:', fact.id, error);
-          return fact; // Return fact without generated image
+          return fact;
         }
       }));
       
@@ -63,9 +66,14 @@ export const TodayDeck = () => {
       // Mark facts as viewed
       selectedFacts.forEach(fact => viewFact(fact.id));
       
+      const generatedCount = selectedFacts.filter(f => f.isGenerated).length;
+      const message = generatedCount > 0 
+        ? `Fresh facts loaded! ${generatedCount} newly generated facts included.`
+        : "Fresh facts loaded! Discover fascinating new facts today.";
+      
       toast({
-        title: "Fresh facts loaded!",
-        description: "Discover fascinating new facts today.",
+        title: "Facts ready!",
+        description: message,
       });
     } catch (error) {
       console.error('Error generating today\'s facts:', error);
@@ -76,6 +84,7 @@ export const TodayDeck = () => {
       });
     } finally {
       setIsRefreshing(false);
+      setIsGenerating(false);
     }
   };
 
@@ -122,9 +131,11 @@ export const TodayDeck = () => {
     return (
       <div className="text-center py-16">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center animate-pulse">
-          <span className="text-2xl">🤔</span>
+          <span className="text-2xl">{isGenerating ? "🎯" : "🤔"}</span>
         </div>
-        <p className="text-neutral-600 dark:text-neutral-400">Loading today's facts...</p>
+        <p className="text-neutral-600 dark:text-neutral-400">
+          {isGenerating ? "Generating fresh facts for you..." : "Loading today's facts..."}
+        </p>
       </div>
     );
   }
@@ -146,7 +157,7 @@ export const TodayDeck = () => {
           disabled={isRefreshing}
         >
           <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          {isRefreshing ? 'Refreshing...' : 'New Facts'}
+          {isRefreshing ? 'Generating...' : 'New Facts'}
         </Button>
       </div>
 

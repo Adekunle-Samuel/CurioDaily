@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { UserFactProgress } from '@/types/factProgress';
 import { factProgressStorage } from '@/services/factProgressStorage';
@@ -106,8 +105,8 @@ export const useFactProgress = () => {
     return factProgress.find(p => p.factId === factId);
   };
 
-  const getFactsToShow = (allFacts: any[], preferredTopics: string[] = []) => {
-    return factSelectionService.getFactsToShow(allFacts, factProgress, preferredTopics);
+  const getFactsToShow = async (allFacts: any[], currentProgress: UserFactProgress[], preferredTopics: string[] = []) => {
+    return factSelectionService.getFactsToShow(allFacts, currentProgress, preferredTopics);
   };
 
   const getViewedFacts = () => {
