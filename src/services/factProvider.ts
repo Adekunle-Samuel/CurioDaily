@@ -124,29 +124,34 @@ class FactProvider {
   private async generateFactsForTopic(topic: string, count: number): Promise<ExtendedFact[]> {
     try {
       const generatedFacts = await deepseekService.generateFactsByTopic(topic, count);
-      return generatedFacts.map((fact, index) => ({
-        id: `${topic}_${Date.now()}_${index}_${Math.random()}`,
-        title: fact.title,
-        blurb: fact.blurb,
-        body: fact.blurb,
-        topic: fact.topic,
-        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
-        sources: [
-          {
-            title: "AI Generated Fact",
-            publication: "Deepseek AI",
-            type: "article" as const,
-            year: new Date().getFullYear()
-          }
-        ],
-        xpValue: 15,
-        difficulty: 'medium' as const,
-        tags: [fact.topic],
-        dateAdded: new Date().toISOString().split('T')[0],
-        verificationLevel: 'verified' as const,
-        quiz: fact.quiz,
-        isGenerated: true
-      }));
+      return generatedFacts.map((fact, index) => {
+        // Generate a numeric ID by combining timestamp and index
+        const numericId = Date.now() + index;
+        
+        return {
+          id: numericId,
+          title: fact.title,
+          blurb: fact.blurb,
+          body: fact.blurb,
+          topic: fact.topic,
+          image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+          sources: [
+            {
+              title: "AI Generated Fact",
+              publication: "Deepseek AI",
+              type: "article" as const,
+              year: new Date().getFullYear()
+            }
+          ],
+          xpValue: 15,
+          difficulty: 'medium' as const,
+          tags: [fact.topic],
+          dateAdded: new Date().toISOString().split('T')[0],
+          verificationLevel: 'verified' as const,
+          quiz: fact.quiz,
+          isGenerated: true
+        };
+      });
     } catch (error) {
       console.error(`Failed to generate facts for topic ${topic}:`, error);
       return [];
